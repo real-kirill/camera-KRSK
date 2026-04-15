@@ -55,13 +55,38 @@
             pointer-events: auto;
         }
         .goto-me-btn:active { transform: scale(0.95); }
+        .reset-rotate-btn {
+            position: fixed;
+            bottom: 140px;
+            right: 10px;
+            background: #16a085;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1001;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            border: none;
+            transition: 0.2s;
+            pointer-events: auto;
+        }
+        .reset-rotate-btn:active { transform: scale(0.95); }
         @media (min-width: 768px) {
             .nav-bottom { left: auto; right: auto; width: 500px; left: 50%; transform: translateX(-50%); border-radius: 20px; bottom: 20px; }
             .nav-bottom.hidden { transform: translateX(-50%) translateY(100%); }
             .toggle-panel { right: auto; left: 50%; margin-left: 200px; bottom: 20px; }
             .goto-me-btn { right: auto; left: 50%; margin-left: 240px; bottom: 20px; }
+            .reset-rotate-btn { right: auto; left: 50%; margin-left: 180px; bottom: 20px; }
         }
     </style>
+    <!-- Подключаем Leaflet и плагин вращения -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.1.4/leaflet-rotate.css" />
 </head>
 <body>
     <div class="app-header">
@@ -72,6 +97,7 @@
     <div class="mobile-legend">🟢 A (моё место) | 🌀 вращение двумя пальцами</div>
     <div class="toggle-panel" id="togglePanelBtn">▲</div>
     <button class="goto-me-btn" id="gotoMeBtn" title="Переместиться на моё местоположение">📍</button>
+    <button class="reset-rotate-btn" id="resetRotateBtn" title="Сбросить поворот карты">🧭</button>
     
     <div class="nav-bottom" id="navBottom">
         <div class="route-inputs">
@@ -90,9 +116,10 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.1.4/leaflet-rotate.js"></script>
     <script>
-        // ===== КАРТА С ПОЛНОЙ ПОДДЕРЖКОЙ СЕНСОРНОГО УПРАВЛЕНИЯ =====
-        // Создаём карту с включёнными всеми жестами
+        // ===== КАРТА С ПОДДЕРЖКОЙ ВРАЩЕНИЯ ЧЕРЕЗ ПЛАГИН =====
+        // Плагин leaflet-rotate добавляет метод setBearing и поддержку rotate
         var map = L.map('map', {
             dragging: true,
             touchZoom: true,
@@ -102,14 +129,17 @@
             keyboard: true,
             tap: true,
             inertia: true,
-            zoomControl: true
+            // Включаем вращение через плагин
+            rotate: true,
+            rotateControl: false,
+            trackResize: true
         }).setView([56.0184, 92.8672], 12);
         
         // Принудительно включаем все сенсорные возможности
-        map.dragging.enable();
-        map.touchZoom.enable();
-        map.scrollWheelZoom.enable();
-        map.doubleClickZoom.enable();
+        if (map.dragging) map.dragging.enable();
+        if (map.touchZoom) map.touchZoom.enable();
+        if (map.scrollWheelZoom) map.scrollWheelZoom.enable();
+        if (map.doubleClickZoom) map.doubleClickZoom.enable();
         
         // Добавляем слои карты
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -122,6 +152,14 @@
             maxZoom: 20,
             opacity: 0.85
         }).addTo(map);
+        
+        // Кнопка сброса вращения
+        document.getElementById('resetRotateBtn').addEventListener('click', function() {
+            if (map.setBearing) {
+                map.setBearing(0);
+                speakText("Поворот карты сброшен");
+            }
+        });
         
         // ===== ГОЛОСОВАЯ ФУНКЦИЯ =====
         var voiceEnabled = true;
@@ -153,7 +191,6 @@
         var nextStepIndex = 0;
         var lastNotifiedStep = -1;
         
-        // ===== ФУНКЦИИ ДЛЯ РАБОТЫ С МАРШРУТОМ =====
         function getDistance(lat1, lon1, lat2, lon2) {
             var R = 6371000;
             var φ1 = lat1 * Math.PI / 180;
@@ -210,7 +247,6 @@
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
                     
-                    // Обновляем начальную точку
                     startPointCoord = { lat: lat, lng: lng };
                     if (startMarker) map.removeLayer(startMarker);
                     startMarker = L.marker([lat, lng], {
@@ -222,7 +258,6 @@
                     
                     document.getElementById('startPoint').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                     
-                    // Обновляем синюю точку текущего местоположения
                     if (currentLocationMarker) map.removeLayer(currentLocationMarker);
                     currentLocationMarker = L.marker([lat, lng], {
                         icon: L.divIcon({
@@ -231,7 +266,6 @@
                         })
                     }).addTo(map);
                     
-                    // Проверяем прогресс маршрута (без автоматического центрирования)
                     checkRouteProgress(lat, lng);
                 },
                 function(error) { 
@@ -286,7 +320,7 @@
         autoUpdateBtn.addEventListener('click', toggleAutoUpdate);
         voiceAssistantBtn.addEventListener('click', toggleVoiceAssistant);
         
-        // ===== ГЕОКОДИНГ (поиск адреса) =====
+        // ===== ГЕОКОДИНГ =====
         async function geocodeAddress(address) {
             if (!address.toLowerCase().includes('красноярск')) {
                 address = address + ', Красноярск';
@@ -328,9 +362,7 @@
                             if (step.maneuver && step.maneuver.instruction) {
                                 currentSteps.push({
                                     instruction: step.maneuver.instruction,
-                                    distance: step.distance,
-                                    modifier: step.maneuver.modifier,
-                                    type: step.maneuver.type
+                                    distance: step.distance
                                 });
                             }
                         });
@@ -368,7 +400,7 @@
             }
         }
         
-        // ===== КЛИКИ ПО КАРТЕ ДЛЯ ВЫБОРА ТОЧЕК =====
+        // ===== КЛИКИ ПО КАРТЕ =====
         map.on('click', function(e) {
             if (waitingForStart) {
                 startPointCoord = { lat: e.latlng.lat, lng: e.latlng.lng };
@@ -397,7 +429,6 @@
             }
         });
         
-        // Обработка фокуса на полях ввода
         document.getElementById('startPoint').addEventListener('focus', function() {
             waitingForStart = true;
             waitingForEnd = false;
@@ -410,7 +441,7 @@
             this.placeholder = "Кликните на карте";
         });
         
-        // Кнопка "Моё место" — центрирует карту на текущую позицию
+        // Кнопка "Моё место"
         document.getElementById('myLocationBtn').addEventListener('click', function() {
             if (!navigator.geolocation) {
                 alert("Геолокация не поддерживается");
@@ -435,7 +466,7 @@
             );
         });
         
-        // Отдельная кнопка "На меня" (для удобства)
+        // Кнопка "На меня"
         document.getElementById('gotoMeBtn').addEventListener('click', function() {
             if (!navigator.geolocation) {
                 alert("Геолокация не поддерживается");
@@ -470,7 +501,6 @@
                 var start = startPointCoord;
                 var end = endPointCoord;
                 
-                // Если координаты не заданы кликом, пробуем геокодирование
                 if (!start && startText && !startText.includes(",")) {
                     this.textContent = "⏳ Ищем откуда...";
                     start = await geocodeAddress(startText);
@@ -480,7 +510,6 @@
                     end = await geocodeAddress(endText);
                 }
                 
-                // Если всё ещё нет координат, возможно пользователь ввёл координаты вручную
                 if (!start && startText.includes(",")) {
                     var parts = startText.split(",");
                     if (parts.length >= 2) {
@@ -495,13 +524,13 @@
                 }
                 
                 if (!start) {
-                    alert(`Не удалось найти адрес: ${startText}\nПопробуйте указать подробнее, например: Красноярск, ул. Ленина, 1`);
+                    alert(`Не удалось найти адрес: ${startText}`);
                     this.textContent = "🗺️ Маршрут";
                     this.disabled = false;
                     return;
                 }
                 if (!end) {
-                    alert(`Не удалось найти адрес: ${endText}\nПопробуйте указать подробнее, например: Красноярск, ул. Мира, 10`);
+                    alert(`Не удалось найти адрес: ${endText}`);
                     this.textContent = "🗺️ Маршрут";
                     this.disabled = false;
                     return;
@@ -513,18 +542,18 @@
                 if (route) {
                     displayRoute(route.geometry, route.distance, route.duration);
                 } else {
-                    alert("Не удалось построить маршрут. Попробуйте выбрать другие точки или проверьте подключение к интернету.");
+                    alert("Не удалось построить маршрут. Попробуйте выбрать другие точки.");
                 }
             } catch (err) {
                 console.error("Ошибка:", err);
-                alert("Ошибка при построении маршрута. Попробуйте позже.");
+                alert("Ошибка при построении маршрута.");
             } finally {
                 this.textContent = "🗺️ Маршрут";
                 this.disabled = false;
             }
         });
         
-        // Очистка маршрута
+        // Очистка
         document.getElementById('clearRouteBtn').addEventListener('click', function() {
             if (currentRoute) map.removeLayer(currentRoute);
             if (startMarker) map.removeLayer(startMarker);
@@ -543,7 +572,7 @@
             speakText("Маршрут очищен");
         });
         
-        // Скрытие/показ панели
+        // Скрытие панели
         var navBottom = document.getElementById('navBottom');
         var toggleBtn = document.getElementById('togglePanelBtn');
         toggleBtn.addEventListener('click', function() {
@@ -551,12 +580,11 @@
             this.textContent = navBottom.classList.contains('hidden') ? '▼' : '▲';
         });
         
-        // Корректировка размера карты после загрузки
         setTimeout(function() {
             map.invalidateSize();
         }, 100);
         
-        console.log("📱 Навигатор загружен! Карту можно вращать двумя пальцами, все кнопки работают.");
+        console.log("📱 Навигатор загружен! Карту можно вращать двумя пальцами (плагин leaflet-rotate)");
     </script>
 </body>
 </html>
