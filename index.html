@@ -9,7 +9,6 @@
     <title>ГИБДД Навигатор Красноярск</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <style>
-        /* ... (стили остаются без изменений) ... */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #1a472a; overflow: hidden; position: fixed; width: 100%; height: 100%; }
         .app-header { position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a472a, #0d2818); color: white; padding: 12px 16px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: space-between; }
@@ -34,18 +33,12 @@
         .route-select select { flex: 1; padding: 12px; border-radius: 30px; border: 1px solid #ddd; background: #f5f5f5; font-size: 14px; outline: none; }
         .route-info { background: #e8f5e9; padding: 10px; border-radius: 20px; font-size: 12px; text-align: center; display: none; }
         .voice-status { background: #8e44ad; color: white; padding: 5px 10px; border-radius: 20px; font-size: 11px; text-align: center; margin-top: 5px; display: none; }
-        .speed-indicator { position: fixed; top: 70px; right: 10px; background: white; padding: 8px 15px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-family: Arial, sans-serif; text-align: center; min-width: 120px; z-index: 2000; }
-        .speed-indicator .current-speed { font-size: 24px; font-weight: bold; }
-        .speed-indicator .speed-limit { font-size: 14px; color: #666; }
-        .speed-indicator .warning { color: #e74c3c; }
-        .speed-indicator .normal { color: #27ae60; }
         .toggle-panel { position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; cursor: pointer; z-index: 1001; backdrop-filter: blur(5px); }
         .mobile-legend { position: fixed; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); padding: 6px 12px; border-radius: 20px; color: white; font-size: 10px; z-index: 1000; pointer-events: none; }
         @media (min-width: 768px) {
             .nav-bottom { left: auto; right: auto; width: 500px; left: 50%; transform: translateX(-50%); border-radius: 20px; bottom: 20px; }
             .nav-bottom.hidden { transform: translateX(-50%) translateY(100%); }
             .toggle-panel { right: auto; left: 50%; margin-left: 200px; bottom: 20px; }
-            .speed-indicator { top: 80px; right: 20px; }
         }
     </style>
 </head>
@@ -64,7 +57,7 @@
             <div class="input-wrapper"><span>🅱️</span><input type="text" id="endPoint" placeholder="Куда"></div>
         </div>
         <div class="route-select">
-            <select id="routeType"><option value="auto">🚗 На машине</option><option value="pedestrian">🚶 Пешком</option></select>
+            <select id="routeType"><option value="car">🚗 На машине</option><option value="pedestrian">🚶 Пешком</option></select>
         </div>
         <div class="action-buttons">
             <button id="myLocationBtn" class="btn-location">📍 Моё место</button>
@@ -75,11 +68,6 @@
         </div>
         <div id="voiceStatus" class="voice-status">🎤 Голосовой помощник активен</div>
         <div id="routeInfo" class="route-info"></div>
-    </div>
-
-    <div id="speedIndicator" class="speed-indicator">
-        <div class="current-speed" id="currentSpeed">-- км/ч</div>
-        <div class="speed-limit" id="speedLimit">ограничение: --</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -338,7 +326,6 @@
         var nextStepIndex = 0;
         var lastNotifiedStep = -1;
         var alertedCameras = {};
-        var currentSpeedLimit = null;
         
         // ===== ФУНКЦИЯ РАСЧЁТА РАССТОЯНИЯ =====
         function getDistance(lat1, lon1, lat2, lon2) {
@@ -352,27 +339,6 @@
                     Math.sin(Δλ/2) * Math.sin(Δλ/2);
             var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             return R * c;
-        }
-        
-        // ===== ФУНКЦИЯ ДЛЯ ОБНОВЛЕНИЯ ИНДИКАТОРА СКОРОСТИ =====
-        function updateSpeedIndicator(currentSpeedKmh, speedLimit) {
-            var speedDiv = document.getElementById('currentSpeed');
-            var limitDiv = document.getElementById('speedLimit');
-            
-            if (speedDiv) {
-                speedDiv.textContent = `${Math.round(currentSpeedKmh)} км/ч`;
-                if (speedLimit && currentSpeedKmh > speedLimit) {
-                    speedDiv.classList.add('warning');
-                    speedDiv.classList.remove('normal');
-                } else {
-                    speedDiv.classList.remove('warning');
-                    speedDiv.classList.add('normal');
-                }
-            }
-            
-            if (limitDiv) {
-                limitDiv.textContent = speedLimit ? `ограничение: ${speedLimit} км/ч` : 'ограничение: --';
-            }
         }
         
         // ===== ПРОВЕРКА КАМЕР =====
@@ -410,94 +376,7 @@
             }
         }
         
-        // ===== ПОСТРОЕНИЕ МАРШРУТА ЧЕРЕЗ VALHALLA API =====
-        async function buildRoute(start, end, profile) {
-            var profileMap = { 'auto': 'auto', 'pedestrian': 'pedestrian' };
-            
-            // Формируем запрос к Valhalla API
-            var requestBody = {
-                locations: [
-                    { lat: start.lat, lon: start.lng },
-                    { lat: end.lat, lon: end.lng }
-                ],
-                costing: profileMap[profile] || 'auto',
-                directions_options: { units: 'kilometers' }
-            };
-            
-            var url = 'https://valhalla1.openstreetmap.de/route?json=' + encodeURIComponent(JSON.stringify(requestBody));
-            
-            try {
-                var response = await fetch(url);
-                var data = await response.json();
-                
-                if (data.trip && data.trip.legs && data.trip.legs.length > 0) {
-                    var leg = data.trip.legs[0];
-                    var route = leg.shape;
-                    var distance = (leg.summary.length / 1000).toFixed(1);
-                    var duration = Math.round(leg.summary.time / 60);
-                    
-                    // Сохраняем шаги маршрута с ограничениями скорости
-                    currentSteps = [];
-                    nextStepIndex = 0;
-                    lastNotifiedStep = -1;
-                    
-                    if (leg.maneuvers) {
-                        leg.maneuvers.forEach(function(maneuver, index) {
-                            var instruction = maneuver.instruction || '';
-                            var stepDistance = maneuver.length || 0;
-                            var speedLimit = null;
-                            
-                            // Пытаемся найти ограничение скорости из streets
-                            if (maneuver.street_names && maneuver.street_names.length > 0) {
-                                // В Valhalla speed_limit может быть в разных местах, пробуем найти
-                                if (maneuver.speed_limit) {
-                                    speedLimit = maneuver.speed_limit;
-                                }
-                            }
-                            
-                            currentSteps.push({
-                                instruction: instruction,
-                                distance: stepDistance,
-                                speedLimit: speedLimit,
-                                type: maneuver.type,
-                                index: index
-                            });
-                        });
-                    }
-                    
-                    // Рисуем маршрут на карте
-                    if (currentRoute) map.removeLayer(currentRoute);
-                    var latlngs = [];
-                    for (var i = 0; i < route.length; i += 2) {
-                        latlngs.push([route[i+1], route[i]]);
-                    }
-                    currentRoute = L.polyline(latlngs, { color: '#e74c3c', weight: 5, opacity: 0.8 }).addTo(map);
-                    map.fitBounds(currentRoute.getBounds());
-                    
-                    // Отображаем информацию о маршруте
-                    var routeInfo = document.getElementById('routeInfo');
-                    routeInfo.style.display = 'block';
-                    routeInfo.innerHTML = `📏 ${distance} км | ⏱️ ${duration} мин | ${profile === 'auto' ? '🚗 На машине' : '🚶 Пешком'}`;
-                    
-                    // Голосовое оповещение о маршруте
-                    if (voiceEnabled) {
-                        speakText(`Маршрут построен. Расстояние ${distance} километров, время в пути примерно ${duration} минут`);
-                    }
-                    
-                    return { geometry: latlngs, distance: distance, duration: duration };
-                }
-                return null;
-            } catch (error) {
-                console.error("Ошибка Valhalla API:", error);
-                return null;
-            }
-        }
-        
-        function displayRoute(geometry, distance, duration) {
-            // Уже обработано в buildRoute
-        }
-        
-        // ===== АВТООБНОВЛЕНИЕ =====
+        // ===== АВТООБНОВЛЕНИЕ С ГОЛОСОМ =====
         var watchPositionId = null;
         var autoUpdateActive = false;
         var autoUpdateBtn = document.getElementById('autoUpdateBtn');
@@ -520,7 +399,6 @@
                 function(position) {
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
-                    var currentSpeed = (position.coords.speed || 0) * 3.6;
                     
                     startPointCoord = { lat: lat, lng: lng };
                     if (startMarker) map.removeLayer(startMarker);
@@ -541,23 +419,8 @@
                     }).addTo(map);
                     
                     map.panTo([lat, lng]);
-                    
-                    // Проверяем камеры и маршрут
                     checkCamerasAndAlert(lat, lng);
                     checkRouteProgress(lat, lng);
-                    
-                    // Обновляем индикатор скорости
-                    updateSpeedIndicator(currentSpeed, currentSpeedLimit);
-                    
-                    // Предупреждение о превышении скорости
-                    if (voiceEnabled && currentSpeedLimit && currentSpeed > currentSpeedLimit && currentSpeedLimit > 0) {
-                        speakText(`Внимание! Превышение скорости. Ограничение ${currentSpeedLimit} километров в час`);
-                        // Сбрасываем флаг, чтобы не повторять слишком часто
-                        if (window.speedAlertTimeout) clearTimeout(window.speedAlertTimeout);
-                        window.speedAlertTimeout = setTimeout(function() {
-                            // Сброс для следующего предупреждения
-                        }, 30000);
-                    }
                 },
                 function(error) { console.error("Ошибка геолокации:", error.message); },
                 options
@@ -600,7 +463,7 @@
         autoUpdateBtn.addEventListener('click', toggleAutoUpdate);
         voiceAssistantBtn.addEventListener('click', toggleVoiceAssistant);
         
-        // ===== ГЕОКОДИНГ =====
+        // ===== ПОСТРОЕНИЕ МАРШРУТА =====
         async function geocodeAddress(address) {
             var url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
             try {
@@ -609,6 +472,50 @@
                 if (data && data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
                 return null;
             } catch (error) { return null; }
+        }
+        
+        async function buildRoute(start, end, profile) {
+            var profileMap = { 'car': 'driving', 'pedestrian': 'walking' };
+            var url = `https://router.project-osrm.org/route/v1/${profileMap[profile]}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&steps=true`;
+            try {
+                var response = await fetch(url);
+                var data = await response.json();
+                if (data.code === 'Ok' && data.routes.length > 0) {
+                    var route = data.routes[0];
+                    currentSteps = [];
+                    nextStepIndex = 0;
+                    lastNotifiedStep = -1;
+                    
+                    if (route.legs && route.legs[0] && route.legs[0].steps) {
+                        route.legs[0].steps.forEach(function(step) {
+                            currentSteps.push({
+                                instruction: step.maneuver.instruction,
+                                distance: step.distance,
+                                modifier: step.maneuver.modifier,
+                                type: step.maneuver.type
+                            });
+                        });
+                    }
+                    
+                    if (voiceEnabled) {
+                        var distanceKm = (route.distance / 1000).toFixed(1);
+                        var durationMin = Math.round(route.duration / 60);
+                        speakText(`Маршрут построен. Расстояние ${distanceKm} километров, время в пути примерно ${durationMin} минут`);
+                    }
+                    
+                    return { geometry: route.geometry, distance: (route.distance / 1000).toFixed(1), duration: Math.round(route.duration / 60) };
+                }
+                return null;
+            } catch (error) { return null; }
+        }
+        
+        function displayRoute(geometry, distance, duration) {
+            if (currentRoute) map.removeLayer(currentRoute);
+            currentRoute = L.geoJSON(geometry, { style: { color: '#e74c3c', weight: 5, opacity: 0.8 } }).addTo(map);
+            var routeInfo = document.getElementById('routeInfo');
+            routeInfo.style.display = 'block';
+            routeInfo.innerHTML = `📏 ${distance} км | ⏱️ ${duration} мин | ${document.getElementById('routeType').options[document.getElementById('routeType').selectedIndex].text}`;
+            if (currentRoute.getBounds) map.fitBounds(currentRoute.getBounds());
         }
         
         // ===== КЛИКИ ПО КАРТЕ =====
@@ -659,7 +566,8 @@
             if (!end && endText && !endText.includes(",")) end = await geocodeAddress(endText);
             if (!start || !end) { alert("Не удалось найти адреса"); this.textContent = "🗺️ Маршрут"; return; }
             var route = await buildRoute(start, end, routeType);
-            if (!route) alert("Не удалось построить маршрут");
+            if (route) displayRoute(route.geometry, route.distance, route.duration);
+            else alert("Не удалось построить маршрут");
             this.textContent = "🗺️ Маршрут";
         });
         
@@ -671,11 +579,9 @@
             currentSteps = [];
             nextStepIndex = 0;
             lastNotifiedStep = -1;
-            currentSpeedLimit = null;
             document.getElementById('startPoint').value = '';
             document.getElementById('endPoint').value = '';
             document.getElementById('routeInfo').style.display = 'none';
-            updateSpeedIndicator(0, null);
         });
         
         var navBottom = document.getElementById('navBottom');
@@ -687,7 +593,7 @@
         
         setTimeout(function() { map.invalidateSize(); }, 100);
         
-        console.log("📱 Приложение с Valhalla API и индикатором скорости загружено! Камер: " + cameras.length);
+        console.log("📱 Приложение с голосовым помощником загружено! Камер: " + cameras.length);
     </script>
 </body>
 </html>
