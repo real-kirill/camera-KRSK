@@ -299,20 +299,65 @@
         var startPointCoord = null, endPointCoord = null;
         var waitingForStart = false, waitingForEnd = false;
         
+        // Улучшенная функция "Моё место" — теперь устанавливает точку А
         document.getElementById('myLocationBtn').addEventListener('click', function() {
-            if (!navigator.geolocation) { alert("Геолокация не поддерживается"); return; }
-            this.textContent = "⏳...";
+            if (!navigator.geolocation) {
+                alert("Геолокация не поддерживается вашим браузером");
+                return;
+            }
+            
+            this.textContent = "⏳ Определение...";
+            this.disabled = true;
+            
             navigator.geolocation.getCurrentPosition(
                 function(position) {
-                    var lat = position.coords.latitude, lng = position.coords.longitude;
-                    map.setView([lat, lng], 16);
-                    if (window.locationMarker) map.removeLayer(window.locationMarker);
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    
+                    // Устанавливаем точку А (откуда)
+                    startPointCoord = { lat: lat, lng: lng };
+                    
+                    // Удаляем старый маркер А, если был
+                    if (startMarker) {
+                        map.removeLayer(startMarker);
+                    }
+                    
+                    // Создаём маркер для точки А (зелёный)
+                    startMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            html: '<div style="background: #27ae60; width: 34px; height: 34px; border-radius: 50%; border: 3px solid white; text-align: center; line-height: 34px; font-size: 18px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">A</div>',
+                            iconSize: [34, 34],
+                            className: 'start-marker'
+                        })
+                    }).addTo(map).bindPopup("🚩 Отправление (моё местоположение)").openPopup();
+                    
+                    // Обновляем поле ввода
+                    document.getElementById('startPoint').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    
+                    // Перемещаем карту к моему местоположению
+                    map.setView([lat, lng], 15);
+                    
+                    // Синяя точка (моё местоположение) для ориентира
+                    if (window.locationMarker) {
+                        map.removeLayer(window.locationMarker);
+                    }
                     window.locationMarker = L.marker([lat, lng], {
-                        icon: L.divIcon({ html: '<div style="background: #2980b9; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white;"></div>', iconSize: [20, 20] })
-                    }).addTo(map).bindPopup("📍 Вы здесь").openPopup();
+                        icon: L.divIcon({
+                            html: '<div style="background: #2980b9; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
+                            iconSize: [14, 14]
+                        })
+                    }).addTo(map);
+                    
                     document.getElementById('myLocationBtn').textContent = "📍 Моё место";
+                    document.getElementById('myLocationBtn').disabled = false;
+                    
+                    console.log("✅ Точка А установлена как моё местоположение:", lat, lng);
                 },
-                function() { alert("Не удалось определить местоположение"); document.getElementById('myLocationBtn').textContent = "📍 Моё место"; }
+                function(error) {
+                    alert("Не удалось определить местоположение: " + error.message);
+                    document.getElementById('myLocationBtn').textContent = "📍 Моё место";
+                    document.getElementById('myLocationBtn').disabled = false;
+                }
             );
         });
         
