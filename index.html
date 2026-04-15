@@ -20,20 +20,22 @@
         .input-wrapper { display: flex; align-items: center; background: #f5f5f5; border-radius: 30px; padding: 4px 12px; }
         .input-wrapper span { font-size: 18px; margin-right: 8px; }
         .input-wrapper input { flex: 1; background: transparent; border: none; padding: 12px 0; font-size: 14px; outline: none; }
-        .action-buttons { display: flex; gap: 10px; margin-bottom: 10px; }
-        .action-buttons button { flex: 1; background: #1a472a; border: none; color: white; padding: 12px; border-radius: 30px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .action-buttons { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .action-buttons button { flex: 1; background: #1a472a; border: none; color: white; padding: 12px; border-radius: 30px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; min-width: 70px; }
         .action-buttons button:active { transform: scale(0.97); }
         .btn-location { background: #2980b9 !important; }
         .btn-clear { background: #7f8c8d !important; }
+        .btn-auto { background: #27ae60 !important; }
+        .btn-auto-active { background: #e67e22 !important; }
         .route-select { display: flex; gap: 10px; margin-bottom: 10px; }
         .route-select select { flex: 1; padding: 12px; border-radius: 30px; border: 1px solid #ddd; background: #f5f5f5; font-size: 14px; outline: none; }
         .route-info { background: #e8f5e9; padding: 10px; border-radius: 20px; font-size: 12px; text-align: center; display: none; }
         .toggle-panel { position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; cursor: pointer; z-index: 1001; backdrop-filter: blur(5px); }
         .mobile-legend { position: fixed; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); padding: 6px 12px; border-radius: 20px; color: white; font-size: 10px; z-index: 1000; pointer-events: none; }
         @media (min-width: 768px) {
-            .nav-bottom { left: auto; right: auto; width: 400px; left: 50%; transform: translateX(-50%); border-radius: 20px; bottom: 20px; }
+            .nav-bottom { left: auto; right: auto; width: 450px; left: 50%; transform: translateX(-50%); border-radius: 20px; bottom: 20px; }
             .nav-bottom.hidden { transform: translateX(-50%) translateY(100%); }
-            .toggle-panel { right: auto; left: 50%; margin-left: 170px; bottom: 20px; }
+            .toggle-panel { right: auto; left: 50%; margin-left: 180px; bottom: 20px; }
         }
     </style>
 </head>
@@ -43,7 +45,7 @@
     </div>
     
     <div id="map"></div>
-    <div class="mobile-legend">🔴🚔 стационарная | 🟡📷 передвижная</div>
+    <div class="mobile-legend">🔴🚔 стац | 🟡📷 пере | 🟢 A (моё место)</div>
     <div class="toggle-panel" id="togglePanelBtn">▲</div>
     
     <div class="nav-bottom" id="navBottom">
@@ -56,6 +58,7 @@
         </div>
         <div class="action-buttons">
             <button id="myLocationBtn" class="btn-location">📍 Моё место</button>
+            <button id="autoUpdateBtn" class="btn-auto">📍 Авто</button>
             <button id="buildRouteBtn">🗺️ Маршрут</button>
             <button id="clearRouteBtn" class="btn-clear">🗑️ Очистить</button>
         </div>
@@ -294,73 +297,135 @@
                 .bindPopup(`<b>${camera.name}</b><br>📍 ${camera.address}<br>⚠️ ${camera.violations}`);
         });
         
-        // ===== НАВИГАЦИЯ =====
+        // ===== НАВИГАЦИЯ И АВТООБНОВЛЕНИЕ =====
         var currentRoute = null, startMarker = null, endMarker = null;
         var startPointCoord = null, endPointCoord = null;
         var waitingForStart = false, waitingForEnd = false;
         
-        // Улучшенная функция "Моё место" — теперь устанавливает точку А
-        document.getElementById('myLocationBtn').addEventListener('click', function() {
+        // Переменные для автообновления
+        var watchPositionId = null;
+        var autoUpdateActive = false;
+        var autoUpdateBtn = document.getElementById('autoUpdateBtn');
+        
+        // Функция автообновления
+        function startAutoUpdate() {
             if (!navigator.geolocation) {
-                alert("Геолокация не поддерживается вашим браузером");
+                alert("Геолокация не поддерживается");
                 return;
             }
             
-            this.textContent = "⏳ Определение...";
+            autoUpdateActive = true;
+            autoUpdateBtn.textContent = '📍 Авто (вкл)';
+            autoUpdateBtn.classList.remove('btn-auto');
+            autoUpdateBtn.classList.add('btn-auto-active');
+            
+            var options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+            
+            watchPositionId = navigator.geolocation.watchPosition(
+                function(position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    
+                    // Обновляем точку А
+                    startPointCoord = { lat: lat, lng: lng };
+                    
+                    // Обновляем маркер А
+                    if (startMarker) {
+                        map.removeLayer(startMarker);
+                    }
+                    startMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            html: '<div style="background: #27ae60; width: 34px; height: 34px; border-radius: 50%; border: 3px solid white; text-align: center; line-height: 34px; font-size: 18px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">A</div>',
+                            iconSize: [34, 34]
+                        })
+                    }).addTo(map).bindPopup("🚩 Отправление (моё местоположение)");
+                    
+                    // Обновляем поле ввода
+                    document.getElementById('startPoint').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    
+                    // Обновляем синюю точку
+                    if (window.locationMarker) {
+                        map.removeLayer(window.locationMarker);
+                    }
+                    window.locationMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            html: '<div style="background: #2980b9; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
+                            iconSize: [16, 16]
+                        })
+                    }).addTo(map);
+                    
+                    // Плавно перемещаем карту
+                    map.panTo([lat, lng]);
+                    
+                    var accuracy = position.coords.accuracy;
+                    console.log(`📍 Обновлено: ${lat.toFixed(6)}, ${lng.toFixed(6)} | Точность: ${Math.round(accuracy)}м`);
+                },
+                function(error) {
+                    console.error("Ошибка геолокации:", error.message);
+                    if (error.code === 1) {
+                        alert("Разрешите доступ к геолокации для автообновления");
+                        stopAutoUpdate();
+                    }
+                },
+                options
+            );
+        }
+        
+        function stopAutoUpdate() {
+            if (watchPositionId !== null) {
+                navigator.geolocation.clearWatch(watchPositionId);
+                watchPositionId = null;
+            }
+            autoUpdateActive = false;
+            autoUpdateBtn.textContent = '📍 Авто';
+            autoUpdateBtn.classList.remove('btn-auto-active');
+            autoUpdateBtn.classList.add('btn-auto');
+            console.log("⏹️ Автообновление остановлено");
+        }
+        
+        function toggleAutoUpdate() {
+            if (!autoUpdateActive) {
+                startAutoUpdate();
+            } else {
+                stopAutoUpdate();
+            }
+        }
+        
+        // Кнопка "Моё место" (однократное центрирование)
+        document.getElementById('myLocationBtn').addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                alert("Геолокация не поддерживается");
+                return;
+            }
+            
+            this.textContent = "⏳...";
             this.disabled = true;
             
             navigator.geolocation.getCurrentPosition(
                 function(position) {
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
-                    
-                    // Устанавливаем точку А (откуда)
-                    startPointCoord = { lat: lat, lng: lng };
-                    
-                    // Удаляем старый маркер А, если был
-                    if (startMarker) {
-                        map.removeLayer(startMarker);
-                    }
-                    
-                    // Создаём маркер для точки А (зелёный)
-                    startMarker = L.marker([lat, lng], {
-                        icon: L.divIcon({
-                            html: '<div style="background: #27ae60; width: 34px; height: 34px; border-radius: 50%; border: 3px solid white; text-align: center; line-height: 34px; font-size: 18px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">A</div>',
-                            iconSize: [34, 34],
-                            className: 'start-marker'
-                        })
-                    }).addTo(map).bindPopup("🚩 Отправление (моё местоположение)").openPopup();
-                    
-                    // Обновляем поле ввода
-                    document.getElementById('startPoint').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                    
-                    // Перемещаем карту к моему местоположению
-                    map.setView([lat, lng], 15);
-                    
-                    // Синяя точка (моё местоположение) для ориентира
-                    if (window.locationMarker) {
-                        map.removeLayer(window.locationMarker);
-                    }
-                    window.locationMarker = L.marker([lat, lng], {
-                        icon: L.divIcon({
-                            html: '<div style="background: #2980b9; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
-                            iconSize: [14, 14]
-                        })
-                    }).addTo(map);
+                    map.setView([lat, lng], 16);
                     
                     document.getElementById('myLocationBtn').textContent = "📍 Моё место";
                     document.getElementById('myLocationBtn').disabled = false;
-                    
-                    console.log("✅ Точка А установлена как моё местоположение:", lat, lng);
                 },
                 function(error) {
-                    alert("Не удалось определить местоположение: " + error.message);
+                    alert("Не удалось определить местоположение");
                     document.getElementById('myLocationBtn').textContent = "📍 Моё место";
                     document.getElementById('myLocationBtn').disabled = false;
                 }
             );
         });
         
+        // Кнопка автообновления
+        autoUpdateBtn.addEventListener('click', toggleAutoUpdate);
+        
+        // ===== ОСТАЛЬНЫЕ ФУНКЦИИ =====
         async function geocodeAddress(address) {
             var url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
             try {
@@ -453,7 +518,7 @@
         
         setTimeout(function() { map.invalidateSize(); }, 100);
         
-        console.log("📱 Приложение загружено! Камер: " + cameras.length);
+        console.log("📱 Приложение с автообновлением загружено! Камер: " + cameras.length);
     </script>
 </body>
 </html>
