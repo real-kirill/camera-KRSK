@@ -29,8 +29,6 @@
         .btn-auto-active { background: #e67e22 !important; }
         .btn-voice { background: #8e44ad !important; }
         .btn-voice-active { background: #6c3483 !important; }
-        .btn-compass { background: #16a085 !important; }
-        .btn-compass-active { background: #e67e22 !important; }
         .route-info { background: #e8f5e9; padding: 10px; border-radius: 20px; font-size: 12px; text-align: center; display: none; }
         .voice-status { background: #8e44ad; color: white; padding: 5px 10px; border-radius: 20px; font-size: 11px; text-align: center; margin-top: 5px; display: none; }
         .toggle-panel { position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; cursor: pointer; z-index: 1001; backdrop-filter: blur(5px); pointer-events: auto; }
@@ -57,35 +55,24 @@
             pointer-events: auto;
         }
         .goto-me-btn:active { transform: scale(0.95); }
-        .compass-btn {
-            position: fixed;
-            bottom: 140px;
-            right: 10px;
-            background: #16a085;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 1001;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            border: none;
-            transition: 0.2s;
-            pointer-events: auto;
-        }
-        .compass-btn:active { transform: scale(0.95); }
-        .compass-btn.active { background: #e67e22; }
         @media (min-width: 768px) {
             .nav-bottom { left: auto; right: auto; width: 500px; left: 50%; transform: translateX(-50%); border-radius: 20px; bottom: 20px; }
             .nav-bottom.hidden { transform: translateX(-50%) translateY(100%); }
             .toggle-panel { right: auto; left: 50%; margin-left: 200px; bottom: 20px; }
             .goto-me-btn { right: auto; left: 50%; margin-left: 240px; bottom: 20px; }
-            .compass-btn { right: auto; left: 50%; margin-left: 180px; bottom: 20px; }
+        }
+        /* Анимация для маркера направления */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+        .direction-pulse {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(41, 128, 185, 0.4);
+            animation: pulse 1.5s ease-out infinite;
         }
     </style>
 </head>
@@ -95,10 +82,9 @@
     </div>
     
     <div id="map"></div>
-    <div class="mobile-legend">🟢 A (моё место) | 🧭 компас (поворот по движению)</div>
+    <div class="mobile-legend">🟢 A (моё место) | 🧭 стрелка показывает направление</div>
     <div class="toggle-panel" id="togglePanelBtn">▲</div>
     <button class="goto-me-btn" id="gotoMeBtn" title="Переместиться на моё местоположение">📍</button>
-    <button class="compass-btn" id="compassBtn" title="Поворачивать карту по направлению движения">🧭</button>
     
     <div class="nav-bottom" id="navBottom">
         <div class="route-inputs">
@@ -118,7 +104,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
-        // ===== КАРТА (стандартный Leaflet без вращения, но с компромиссом — компас) =====
+        // ===== КАРТА (без вращения — стабильное управление) =====
         var map = L.map('map', {
             dragging: true,
             touchZoom: true,
@@ -179,40 +165,31 @@
         var nextStepIndex = 0;
         var lastNotifiedStep = -1;
         
-        // Для компаса
-        var compassActive = false;
-        var lastLat = null;
-        var lastLng = null;
-        var lastTimestamp = 0;
-        var compassBtn = document.getElementById('compassBtn');
-        
-        // Функция поворота карты (через css transform, так как Leaflet не поддерживает rotate)
-        // Но мы не можем вращать тайлы, поэтому лучше использовать стандартное поведение.
-        // Вместо вращения карты — будем показывать направление стрелкой и поворачивать карту через setBearing? 
-        // Leaflet не поддерживает. Поэтому сделаем просто: при включенном компасе карта будет центрироваться на вас и 
-        // показывать маркер с направлением. А поворачивать карту — увы, невозможно без плагинов.
-        // Объясню пользователю, что для вращения нужно использовать два пальца (но это стандартное поведение карты).
-        
-        // ===== АВТООБНОВЛЕНИЕ =====
+        // ===== АВТООБНОВЛЕНИЕ С ОТОБРАЖЕНИЕМ НАПРАВЛЕНИЯ =====
         var watchPositionId = null;
         var autoUpdateActive = false;
         var autoUpdateBtn = document.getElementById('autoUpdateBtn');
         var voiceAssistantBtn = document.getElementById('voiceAssistantBtn');
         var voiceStatus = document.getElementById('voiceStatus');
         var currentLocationMarker = null;
-        var directionArrow = null; // стрелка направления
+        var directionMarker = null; // маркер со стрелкой направления
         
-        function updateDirectionArrow(lat, lng, bearing) {
-            if (directionArrow) map.removeLayer(directionArrow);
-            
-            // Стрелка направления (компас)
-            var arrowIcon = L.divIcon({
-                html: `<div style="background: #2980b9; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; transform: rotate(${bearing}deg);">🧭</div>`,
-                iconSize: [30, 30],
-                className: 'direction-arrow'
+        // Функция создания стрелки направления
+        function createDirectionIcon(heading) {
+            // Стрелка с поворотом, показывающая направление движения
+            return L.divIcon({
+                html: `<div style="background: #2980b9; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; transform: rotate(${heading}deg); box-shadow: 0 2px 8px rgba(0,0,0,0.3); border: 2px solid white;">🧭</div>`,
+                iconSize: [40, 40],
+                className: 'direction-marker'
             });
-            
-            directionArrow = L.marker([lat, lng], { icon: arrowIcon }).addTo(map);
+        }
+        
+        // Функция создания синей точки
+        function createLocationIcon() {
+            return L.divIcon({
+                html: '<div style="background: #2980b9; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
+                iconSize: [16, 16]
+            });
         }
         
         function startAutoUpdate() {
@@ -226,14 +203,12 @@
             autoUpdateBtn.classList.add('btn-auto-active');
             
             var options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
-            var lastPosition = null;
             
             watchPositionId = navigator.geolocation.watchPosition(
                 function(position) {
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
-                    var heading = position.coords.heading; // направление движения (0-360)
-                    var speed = position.coords.speed;
+                    var heading = position.coords.heading; // направление движения (0-360), может быть null
                     
                     // Обновляем начальную точку
                     startPointCoord = { lat: lat, lng: lng };
@@ -247,51 +222,43 @@
                     
                     document.getElementById('startPoint').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                     
-                    // Синяя точка
+                    // Синяя точка текущего местоположения
                     if (currentLocationMarker) map.removeLayer(currentLocationMarker);
-                    currentLocationMarker = L.marker([lat, lng], {
-                        icon: L.divIcon({
-                            html: '<div style="background: #2980b9; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
-                            iconSize: [16, 16]
-                        })
-                    }).addTo(map);
+                    currentLocationMarker = L.marker([lat, lng], { icon: createLocationIcon() }).addTo(map);
                     
-                    // Если компас активен и есть направление — поворачиваем карту
-                    if (compassActive && heading !== null && !isNaN(heading)) {
-                        // Попытка повернуть карту через CSS (работает только в некоторых браузерах)
-                        var mapContainer = map.getContainer();
-                        mapContainer.style.transition = 'transform 0.3s ease';
-                        mapContainer.style.transform = `rotate(${-heading}deg)`;
+                    // Стрелка направления (если есть данные о heading)
+                    if (directionMarker) map.removeLayer(directionMarker);
+                    
+                    if (heading !== null && !isNaN(heading)) {
+                        // Показываем стрелку направления
+                        directionMarker = L.marker([lat, lng], { 
+                            icon: createDirectionIcon(heading),
+                            zIndexOffset: 100
+                        }).addTo(map);
                         
-                        // Также поворачиваем маркер направления
-                        if (directionArrow) map.removeLayer(directionArrow);
-                        var arrowIcon = L.divIcon({
-                            html: `<div style="background: #2980b9; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; transform: rotate(${heading}deg);">🧭</div>`,
-                            iconSize: [34, 34]
-                        });
-                        directionArrow = L.marker([lat, lng], { icon: arrowIcon }).addTo(map);
-                    } else if (compassActive && heading === null) {
-                        // Если нет направления, но компас активен — показываем стрелку по умолчанию
-                        if (directionArrow) map.removeLayer(directionArrow);
-                        var arrowIcon = L.divIcon({
-                            html: `<div style="background: #2980b9; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">🧭</div>`,
-                            iconSize: [34, 34]
-                        });
-                        directionArrow = L.marker([lat, lng], { icon: arrowIcon }).addTo(map);
+                        // Добавляем пульсирующий эффект (опционально, через отдельный слой)
+                        speakText(`Направление ${Math.round(heading)} градусов`);
                     } else {
-                        if (directionArrow) map.removeLayer(directionArrow);
-                        directionArrow = null;
+                        // Если нет данных о направлении, показываем обычную стрелку на север
+                        directionMarker = L.marker([lat, lng], { 
+                            icon: createDirectionIcon(0),
+                            zIndexOffset: 100
+                        }).addTo(map);
                     }
                     
                     // Проверяем прогресс маршрута
                     checkRouteProgress(lat, lng);
-                    
-                    lastPosition = { lat: lat, lng: lng, heading: heading };
                 },
                 function(error) { 
                     console.error("Ошибка геолокации:", error.message);
                     if (autoUpdateActive) {
-                        alert("Не удаётся определить местоположение. Проверьте разрешения.");
+                        if (error.code === 1) {
+                            alert("Нет разрешения на определение местоположения. Включите геолокацию в настройках.");
+                        } else if (error.code === 2) {
+                            alert("Не удаётся определить местоположение. Проверьте GPS.");
+                        } else {
+                            alert("Ошибка геолокации. Попробуйте перезагрузить страницу.");
+                        }
                         stopAutoUpdate();
                     }
                 },
@@ -309,11 +276,9 @@
             autoUpdateBtn.classList.remove('btn-auto-active');
             autoUpdateBtn.classList.add('btn-auto');
             
-            // Сбрасываем поворот карты
-            var mapContainer = map.getContainer();
-            mapContainer.style.transform = '';
-            if (directionArrow) map.removeLayer(directionArrow);
-            directionArrow = null;
+            // Убираем стрелку направления
+            if (directionMarker) map.removeLayer(directionMarker);
+            directionMarker = null;
         }
         
         function toggleAutoUpdate() {
@@ -321,26 +286,6 @@
                 startAutoUpdate();
             } else {
                 stopAutoUpdate();
-            }
-        }
-        
-        function toggleCompass() {
-            compassActive = !compassActive;
-            if (compassActive) {
-                compassBtn.classList.add('active');
-                speakText("Режим компаса включён. Карта будет поворачиваться по направлению движения.");
-                // Если автообновление выключено — включаем его автоматически
-                if (!autoUpdateActive) {
-                    startAutoUpdate();
-                }
-            } else {
-                compassBtn.classList.remove('active');
-                // Сбрасываем поворот карты
-                var mapContainer = map.getContainer();
-                mapContainer.style.transform = '';
-                if (directionArrow) map.removeLayer(directionArrow);
-                directionArrow = null;
-                speakText("Режим компаса выключен");
             }
         }
         
@@ -365,7 +310,6 @@
         
         autoUpdateBtn.addEventListener('click', toggleAutoUpdate);
         voiceAssistantBtn.addEventListener('click', toggleVoiceAssistant);
-        compassBtn.addEventListener('click', toggleCompass);
         
         // ===== ФУНКЦИИ МАРШРУТА =====
         function getDistance(lat1, lon1, lat2, lon2) {
@@ -507,20 +451,28 @@
         document.getElementById('myLocationBtn').addEventListener('click', function() {
             if (!navigator.geolocation) { alert("Геолокация не поддерживается"); return; }
             this.textContent = "⏳...";
+            this.disabled = true;
             navigator.geolocation.getCurrentPosition(
                 function(position) {
                     map.setView([position.coords.latitude, position.coords.longitude], 16);
                     document.getElementById('myLocationBtn').textContent = "📍 Моё место";
+                    document.getElementById('myLocationBtn').disabled = false;
                     speakText("Показываю ваше местоположение");
                 },
-                function() { alert("Не удалось определить местоположение"); document.getElementById('myLocationBtn').textContent = "📍 Моё место"; }
+                function() { 
+                    alert("Не удалось определить местоположение"); 
+                    document.getElementById('myLocationBtn').textContent = "📍 Моё место";
+                    document.getElementById('myLocationBtn').disabled = false;
+                }
             );
         });
         
         document.getElementById('gotoMeBtn').addEventListener('click', function() {
             if (!navigator.geolocation) { alert("Геолокация не поддерживается"); return; }
             navigator.geolocation.getCurrentPosition(
-                function(position) { map.setView([position.coords.latitude, position.coords.longitude], 16); },
+                function(position) { 
+                    map.setView([position.coords.latitude, position.coords.longitude], 16);
+                },
                 function() { alert("Не удалось определить местоположение"); }
             );
         });
@@ -543,7 +495,7 @@
                 var route = await buildRoute(start, end);
                 if (route) displayRoute(route.geometry, route.distance, route.duration);
                 else alert("Не удалось построить маршрут");
-            } catch(err) { alert("Ошибка"); }
+            } catch(err) { alert("Ошибка при построении маршрута"); }
             finally { this.textContent = "🗺️ Маршрут"; this.disabled = false; }
         });
         
@@ -567,7 +519,7 @@
         });
         
         setTimeout(function() { map.invalidateSize(); }, 100);
-        console.log("📱 Навигатор загружен! Включите компас для поворота карты по направлению движения.");
+        console.log("📱 Навигатор загружен! Карта не вращается, стрелка показывает направление движения.");
     </script>
 </body>
 </html>
