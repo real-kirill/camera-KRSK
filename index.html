@@ -7,11 +7,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a472a">
     <title>ГИБДД Навигатор Красноярск</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #1a472a; overflow: hidden; position: fixed; width: 100%; height: 100%; }
-        .app-header { position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a472a, #0d2818); color: white; padding: 12px 16px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: space-between; }
+        .app-header { position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a472a, #0d2818); color: white; padding: 12px 16px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: space-between; z-index: 1000; }
         .app-header h1 { font-size: 18px; font-weight: 600; }
         #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 1; }
         .nav-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 10px 12px; border-radius: 20px 20px 0 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.15); z-index: 1000; transition: transform 0.3s ease; pointer-events: auto; }
@@ -29,6 +29,8 @@
         .btn-auto-active { background: #e67e22 !important; }
         .btn-voice { background: #8e44ad !important; }
         .btn-voice-active { background: #6c3483 !important; }
+        .btn-compass { background: #16a085 !important; }
+        .btn-compass-active { background: #e67e22 !important; }
         .route-info { background: #e8f5e9; padding: 10px; border-radius: 20px; font-size: 12px; text-align: center; display: none; }
         .voice-status { background: #8e44ad; color: white; padding: 5px 10px; border-radius: 20px; font-size: 11px; text-align: center; margin-top: 5px; display: none; }
         .toggle-panel { position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; cursor: pointer; z-index: 1001; backdrop-filter: blur(5px); pointer-events: auto; }
@@ -55,24 +57,48 @@
             pointer-events: auto;
         }
         .goto-me-btn:active { transform: scale(0.95); }
+        .compass-btn {
+            position: fixed;
+            bottom: 140px;
+            right: 10px;
+            background: #16a085;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1001;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            border: none;
+            transition: 0.2s;
+            pointer-events: auto;
+        }
+        .compass-btn:active { transform: scale(0.95); }
+        .compass-btn.active { background: #e67e22; }
         @media (min-width: 768px) {
             .nav-bottom { left: auto; right: auto; width: 500px; left: 50%; transform: translateX(-50%); border-radius: 20px; bottom: 20px; }
             .nav-bottom.hidden { transform: translateX(-50%) translateY(100%); }
             .toggle-panel { right: auto; left: 50%; margin-left: 200px; bottom: 20px; }
             .goto-me-btn { right: auto; left: 50%; margin-left: 240px; bottom: 20px; }
+            .compass-btn { right: auto; left: 50%; margin-left: 180px; bottom: 20px; }
         }
-        /* Анимация для маркера направления */
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(1.3); opacity: 0; }
-        }
-        .direction-pulse {
-            position: absolute;
-            width: 50px;
-            height: 50px;
+        /* Кастомный маркер направления */
+        .direction-marker div {
+            background: #2980b9;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: rgba(41, 128, 185, 0.4);
-            animation: pulse 1.5s ease-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 2px solid white;
         }
     </style>
 </head>
@@ -82,9 +108,10 @@
     </div>
     
     <div id="map"></div>
-    <div class="mobile-legend">🟢 A (моё место) | 🧭 стрелка показывает направление</div>
+    <div class="mobile-legend">🟢 A (моё место) | 🧭 компас (поворот по движению)</div>
     <div class="toggle-panel" id="togglePanelBtn">▲</div>
     <button class="goto-me-btn" id="gotoMeBtn" title="Переместиться на моё местоположение">📍</button>
+    <button class="compass-btn" id="compassBtn" title="Поворачивать карту по направлению движения">🧭</button>
     
     <div class="nav-bottom" id="navBottom">
         <div class="route-inputs">
@@ -102,38 +129,46 @@
         <div id="routeInfo" class="route-info"></div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
     <script>
-        // ===== КАРТА (без вращения — стабильное управление) =====
-        var map = L.map('map', {
-            dragging: true,
-            touchZoom: true,
-            scrollWheelZoom: true,
-            doubleClickZoom: true,
-            boxZoom: true,
-            keyboard: true,
-            tap: true,
-            inertia: true,
-            zoomControl: true
-        }).setView([56.0184, 92.8672], 12);
+        // ===== КАРТА НА OPENLAYERS С ПОДДЕРЖКОЙ ВРАЩЕНИЯ =====
         
-        // Включаем все жесты
-        map.dragging.enable();
-        map.touchZoom.enable();
-        map.scrollWheelZoom.enable();
-        map.doubleClickZoom.enable();
-        
-        // Слои карты
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-            subdomains: 'abcd',
-            maxZoom: 19
-        }).addTo(map);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 20,
+        // Базовые слои
+        var osmLayer = new ol.layer.Tile({
+            source: new ol.source.OSM(),
             opacity: 0.85
-        }).addTo(map);
+        });
+        
+        var cartoLayer = new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: 'https://{a-d}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                attributions: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+            })
+        });
+        
+        // Создаём карту с поддержкой вращения
+        var map = new ol.Map({
+            target: 'map',
+            layers: [cartoLayer, osmLayer],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([92.8672, 56.0184]),
+                zoom: 12,
+                rotation: 0  // начальный угол поворота
+            }),
+            controls: ol.control.defaults({
+                zoom: true,
+                rotate: true,  // кнопка сброса поворота
+                attribution: true
+            })
+        });
+        
+        // Векторный слой для маркеров и маршрутов
+        var vectorSource = new ol.source.Vector();
+        var vectorLayer = new ol.layer.Vector({
+            source: vectorSource,
+            style: null
+        });
+        map.addLayer(vectorLayer);
         
         // ===== ГОЛОС =====
         var voiceEnabled = true;
@@ -154,44 +189,143 @@
         }
         
         // ===== ПЕРЕМЕННЫЕ =====
-        var currentRoute = null;
+        var currentRouteFeature = null;
         var startMarker = null;
         var endMarker = null;
         var startPointCoord = null;
         var endPointCoord = null;
-        var waitingForStart = false;
-        var waitingForEnd = false;
         var currentSteps = [];
         var nextStepIndex = 0;
         var lastNotifiedStep = -1;
         
-        // ===== АВТООБНОВЛЕНИЕ С ОТОБРАЖЕНИЕМ НАПРАВЛЕНИЯ =====
+        // Для автообновления
         var watchPositionId = null;
         var autoUpdateActive = false;
         var autoUpdateBtn = document.getElementById('autoUpdateBtn');
         var voiceAssistantBtn = document.getElementById('voiceAssistantBtn');
         var voiceStatus = document.getElementById('voiceStatus');
         var currentLocationMarker = null;
-        var directionMarker = null; // маркер со стрелкой направления
+        var directionMarker = null;
         
-        // Функция создания стрелки направления
-        function createDirectionIcon(heading) {
-            // Стрелка с поворотом, показывающая направление движения
-            return L.divIcon({
-                html: `<div style="background: #2980b9; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; transform: rotate(${heading}deg); box-shadow: 0 2px 8px rgba(0,0,0,0.3); border: 2px solid white;">🧭</div>`,
-                iconSize: [40, 40],
-                className: 'direction-marker'
+        // Компас
+        var compassActive = false;
+        var compassBtn = document.getElementById('compassBtn');
+        var currentHeading = 0;
+        
+        // Функция создания маркера
+        function createMarker(coord, color, letter, popupText) {
+            var feature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([coord.lng, coord.lat]))
             });
+            
+            var style = new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 16,
+                    fill: new ol.style.Fill({ color: color }),
+                    stroke: new ol.style.Stroke({ color: 'white', width: 2 })
+                }),
+                text: new ol.style.Text({
+                    text: letter,
+                    fill: new ol.style.Fill({ color: 'white' }),
+                    font: 'bold 14px sans-serif'
+                })
+            });
+            
+            feature.setStyle(style);
+            feature.set('popup', popupText);
+            return feature;
+        }
+        
+        // Функция создания маркера направления (стрелка)
+        function createDirectionMarker(coord, heading) {
+            if (directionMarker) vectorSource.removeFeature(directionMarker);
+            
+            var feature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([coord.lng, coord.lat]))
+            });
+            
+            // Используем SVG для стрелки
+            var canvas = document.createElement('canvas');
+            canvas.width = 40;
+            canvas.height = 40;
+            var ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, 40, 40);
+            ctx.save();
+            ctx.translate(20, 20);
+            ctx.rotate((heading * Math.PI) / 180);
+            
+            // Рисуем стрелку
+            ctx.beginPath();
+            ctx.moveTo(0, -15);
+            ctx.lineTo(8, 5);
+            ctx.lineTo(3, 5);
+            ctx.lineTo(3, 12);
+            ctx.lineTo(-3, 12);
+            ctx.lineTo(-3, 5);
+            ctx.lineTo(-8, 5);
+            ctx.closePath();
+            
+            ctx.fillStyle = '#2980b9';
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            
+            // Круг вокруг
+            ctx.beginPath();
+            ctx.arc(0, 0, 18, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.restore();
+            
+            var style = new ol.style.Style({
+                image: new ol.style.Icon({
+                    img: canvas,
+                    imgSize: [40, 40],
+                    anchor: [0.5, 0.5]
+                })
+            });
+            
+            feature.setStyle(style);
+            vectorSource.addFeature(feature);
+            directionMarker = feature;
         }
         
         // Функция создания синей точки
-        function createLocationIcon() {
-            return L.divIcon({
-                html: '<div style="background: #2980b9; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
-                iconSize: [16, 16]
+        function createLocationDot(coord) {
+            if (currentLocationMarker) vectorSource.removeFeature(currentLocationMarker);
+            
+            var feature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([coord.lng, coord.lat]))
             });
+            
+            var style = new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 8,
+                    fill: new ol.style.Fill({ color: '#2980b9' }),
+                    stroke: new ol.style.Stroke({ color: 'white', width: 2 }),
+                    shadowBlur: 5
+                })
+            });
+            
+            feature.setStyle(style);
+            vectorSource.addFeature(feature);
+            currentLocationMarker = feature;
         }
         
+        // Функция обновления поворота карты
+        function updateMapRotation(heading) {
+            if (compassActive && heading !== null && !isNaN(heading)) {
+                var view = map.getView();
+                view.setRotation((heading * Math.PI) / 180);
+                currentHeading = heading;
+            }
+        }
+        
+        // Автообновление местоположения
         function startAutoUpdate() {
             if (!navigator.geolocation) {
                 alert("Геолокация не поддерживается");
@@ -208,42 +342,25 @@
                 function(position) {
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
-                    var heading = position.coords.heading; // направление движения (0-360), может быть null
+                    var heading = position.coords.heading;
                     
                     // Обновляем начальную точку
                     startPointCoord = { lat: lat, lng: lng };
-                    if (startMarker) map.removeLayer(startMarker);
-                    startMarker = L.marker([lat, lng], {
-                        icon: L.divIcon({
-                            html: '<div style="background: #27ae60; width: 34px; height: 34px; border-radius: 50%; border: 3px solid white; text-align: center; line-height: 34px; font-size: 18px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">A</div>',
-                            iconSize: [34, 34]
-                        })
-                    }).addTo(map).bindPopup("🚩 Отправление");
+                    if (startMarker) vectorSource.removeFeature(startMarker);
+                    startMarker = createMarker(startPointCoord, '#27ae60', 'A', 'Отправление');
+                    vectorSource.addFeature(startMarker);
                     
                     document.getElementById('startPoint').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                     
-                    // Синяя точка текущего местоположения
-                    if (currentLocationMarker) map.removeLayer(currentLocationMarker);
-                    currentLocationMarker = L.marker([lat, lng], { icon: createLocationIcon() }).addTo(map);
+                    // Синяя точка
+                    createLocationDot({ lat: lat, lng: lng });
                     
-                    // Стрелка направления (если есть данные о heading)
-                    if (directionMarker) map.removeLayer(directionMarker);
-                    
+                    // Стрелка направления и поворот карты
                     if (heading !== null && !isNaN(heading)) {
-                        // Показываем стрелку направления
-                        directionMarker = L.marker([lat, lng], { 
-                            icon: createDirectionIcon(heading),
-                            zIndexOffset: 100
-                        }).addTo(map);
-                        
-                        // Добавляем пульсирующий эффект (опционально, через отдельный слой)
-                        speakText(`Направление ${Math.round(heading)} градусов`);
+                        createDirectionMarker({ lat: lat, lng: lng }, heading);
+                        updateMapRotation(heading);
                     } else {
-                        // Если нет данных о направлении, показываем обычную стрелку на север
-                        directionMarker = L.marker([lat, lng], { 
-                            icon: createDirectionIcon(0),
-                            zIndexOffset: 100
-                        }).addTo(map);
+                        createDirectionMarker({ lat: lat, lng: lng }, currentHeading || 0);
                     }
                     
                     // Проверяем прогресс маршрута
@@ -253,11 +370,9 @@
                     console.error("Ошибка геолокации:", error.message);
                     if (autoUpdateActive) {
                         if (error.code === 1) {
-                            alert("Нет разрешения на определение местоположения. Включите геолокацию в настройках.");
-                        } else if (error.code === 2) {
-                            alert("Не удаётся определить местоположение. Проверьте GPS.");
+                            alert("Нет разрешения на определение местоположения");
                         } else {
-                            alert("Ошибка геолокации. Попробуйте перезагрузить страницу.");
+                            alert("Ошибка геолокации");
                         }
                         stopAutoUpdate();
                     }
@@ -276,8 +391,14 @@
             autoUpdateBtn.classList.remove('btn-auto-active');
             autoUpdateBtn.classList.add('btn-auto');
             
-            // Убираем стрелку направления
-            if (directionMarker) map.removeLayer(directionMarker);
+            // Сбрасываем поворот карты при выключении
+            if (compassActive) {
+                compassActive = false;
+                compassBtn.classList.remove('active');
+                var view = map.getView();
+                view.setRotation(0);
+            }
+            if (directionMarker) vectorSource.removeFeature(directionMarker);
             directionMarker = null;
         }
         
@@ -286,6 +407,22 @@
                 startAutoUpdate();
             } else {
                 stopAutoUpdate();
+            }
+        }
+        
+        function toggleCompass() {
+            compassActive = !compassActive;
+            if (compassActive) {
+                compassBtn.classList.add('active');
+                speakText("Режим компаса включён. Карта поворачивается по направлению движения");
+                if (!autoUpdateActive) {
+                    startAutoUpdate();
+                }
+            } else {
+                compassBtn.classList.remove('active');
+                var view = map.getView();
+                view.setRotation(0);
+                speakText("Режим компаса выключен");
             }
         }
         
@@ -310,6 +447,7 @@
         
         autoUpdateBtn.addEventListener('click', toggleAutoUpdate);
         voiceAssistantBtn.addEventListener('click', toggleVoiceAssistant);
+        compassBtn.addEventListener('click', toggleCompass);
         
         // ===== ФУНКЦИИ МАРШРУТА =====
         function getDistance(lat1, lon1, lat2, lon2) {
@@ -326,7 +464,7 @@
         }
         
         function checkRouteProgress(userLat, userLng) {
-            if (!currentRoute || currentSteps.length === 0 || !voiceEnabled) return;
+            if (!currentRouteFeature || currentSteps.length === 0 || !voiceEnabled) return;
             
             for (var i = nextStepIndex; i < currentSteps.length; i++) {
                 var step = currentSteps[i];
@@ -396,42 +534,60 @@
         }
         
         function displayRoute(geometry, distance, duration) {
-            if (currentRoute) map.removeLayer(currentRoute);
-            currentRoute = L.geoJSON(geometry, {
-                style: { color: '#e74c3c', weight: 5, opacity: 0.8 }
-            }).addTo(map);
+            // Удаляем старый маршрут
+            if (currentRouteFeature) vectorSource.removeFeature(currentRouteFeature);
+            
+            // Конвертируем GeoJSON в формат OpenLayers
+            var format = new ol.format.GeoJSON();
+            var features = format.readFeatures(geometry);
+            
+            // Стиль маршрута
+            var style = new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#e74c3c',
+                    width: 5,
+                    lineDash: null
+                })
+            });
+            
+            features.forEach(function(feature) {
+                feature.setStyle(style);
+            });
+            
+            currentRouteFeature = features[0];
+            vectorSource.addFeatures(features);
+            
             var routeInfo = document.getElementById('routeInfo');
             routeInfo.style.display = 'block';
             routeInfo.innerHTML = `📏 ${distance} км | ⏱️ ${duration} мин | 🚗 Автомобиль`;
-            if (currentRoute.getBounds && currentRoute.getBounds().isValid()) {
-                map.fitBounds(currentRoute.getBounds());
+            
+            // Приближаем к маршруту
+            if (features[0]) {
+                var extent = features[0].getGeometry().getExtent();
+                map.getView().fit(extent, { padding: [50, 50, 50, 50] });
             }
         }
         
-        // Клики по карте
-        map.on('click', function(e) {
+        // Клик по карте для выбора точек
+        map.on('click', function(evt) {
+            var coord = ol.proj.toLonLat(evt.coordinate);
+            var lat = coord[1];
+            var lng = coord[0];
+            
             if (waitingForStart) {
-                startPointCoord = { lat: e.latlng.lat, lng: e.latlng.lng };
-                if (startMarker) map.removeLayer(startMarker);
-                startMarker = L.marker([startPointCoord.lat, startPointCoord.lng], {
-                    icon: L.divIcon({
-                        html: '<div style="background: #27ae60; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; text-align: center; line-height: 28px; font-size: 14px; font-weight: bold;">A</div>',
-                        iconSize: [28, 28]
-                    })
-                }).addTo(map).bindPopup("🚩 Отправление").openPopup();
-                document.getElementById('startPoint').value = `${startPointCoord.lat.toFixed(4)}, ${startPointCoord.lng.toFixed(4)}`;
+                startPointCoord = { lat: lat, lng: lng };
+                if (startMarker) vectorSource.removeFeature(startMarker);
+                startMarker = createMarker(startPointCoord, '#27ae60', 'A', 'Отправление');
+                vectorSource.addFeature(startMarker);
+                document.getElementById('startPoint').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                 waitingForStart = false;
                 speakText("Точка отправления выбрана");
             } else if (waitingForEnd) {
-                endPointCoord = { lat: e.latlng.lat, lng: e.latlng.lng };
-                if (endMarker) map.removeLayer(endMarker);
-                endMarker = L.marker([endPointCoord.lat, endPointCoord.lng], {
-                    icon: L.divIcon({
-                        html: '<div style="background: #e74c3c; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; text-align: center; line-height: 28px; font-size: 14px; font-weight: bold;">B</div>',
-                        iconSize: [28, 28]
-                    })
-                }).addTo(map).bindPopup("🏁 Назначение").openPopup();
-                document.getElementById('endPoint').value = `${endPointCoord.lat.toFixed(4)}, ${endPointCoord.lng.toFixed(4)}`;
+                endPointCoord = { lat: lat, lng: lng };
+                if (endMarker) vectorSource.removeFeature(endMarker);
+                endMarker = createMarker(endPointCoord, '#e74c3c', 'B', 'Назначение');
+                vectorSource.addFeature(endMarker);
+                document.getElementById('endPoint').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                 waitingForEnd = false;
                 speakText("Точка назначения выбрана");
             }
@@ -454,7 +610,9 @@
             this.disabled = true;
             navigator.geolocation.getCurrentPosition(
                 function(position) {
-                    map.setView([position.coords.latitude, position.coords.longitude], 16);
+                    var view = map.getView();
+                    view.setCenter(ol.proj.fromLonLat([position.coords.longitude, position.coords.latitude]));
+                    view.setZoom(16);
                     document.getElementById('myLocationBtn').textContent = "📍 Моё место";
                     document.getElementById('myLocationBtn').disabled = false;
                     speakText("Показываю ваше местоположение");
@@ -470,8 +628,10 @@
         document.getElementById('gotoMeBtn').addEventListener('click', function() {
             if (!navigator.geolocation) { alert("Геолокация не поддерживается"); return; }
             navigator.geolocation.getCurrentPosition(
-                function(position) { 
-                    map.setView([position.coords.latitude, position.coords.longitude], 16);
+                function(position) {
+                    var view = map.getView();
+                    view.setCenter(ol.proj.fromLonLat([position.coords.longitude, position.coords.latitude]));
+                    view.setZoom(16);
                 },
                 function() { alert("Не удалось определить местоположение"); }
             );
@@ -500,9 +660,9 @@
         });
         
         document.getElementById('clearRouteBtn').addEventListener('click', function() {
-            if (currentRoute) map.removeLayer(currentRoute);
-            if (startMarker) map.removeLayer(startMarker);
-            if (endMarker) map.removeLayer(endMarker);
+            if (currentRouteFeature) vectorSource.removeFeature(currentRouteFeature);
+            if (startMarker) vectorSource.removeFeature(startMarker);
+            if (endMarker) vectorSource.removeFeature(endMarker);
             startPointCoord = null; endPointCoord = null;
             currentSteps = []; nextStepIndex = 0; lastNotifiedStep = -1;
             document.getElementById('startPoint').value = '';
@@ -518,8 +678,12 @@
             this.textContent = navBottom.classList.contains('hidden') ? '▼' : '▲';
         });
         
-        setTimeout(function() { map.invalidateSize(); }, 100);
-        console.log("📱 Навигатор загружен! Карта не вращается, стрелка показывает направление движения.");
+        // Инициализация
+        setTimeout(function() {
+            map.updateSize();
+        }, 100);
+        
+        console.log("📱 Навигатор на OpenLayers загружен! Карта поддерживает вращение через компас.");
     </script>
 </body>
 </html>
