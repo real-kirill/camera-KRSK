@@ -124,7 +124,7 @@
             }
         }
         
-        // ===== ВСЕ КАМЕРЫ =====
+        // ===== ВСЕ 205 КАМЕР (ПОЛНЫЙ СПИСОК) =====
         var cameras = [
             { name: "Передвижной комплекс 27", lat: 56.095688, lng: 95.597434, type: "mobile", address: "Канский район, а/д Р-255 Сибирь 1037км", violations: "Скорость, выезд на встречную" },
             { name: "Передвижной комплекс 27", lat: 56.517, lng: 95.4248, type: "mobile", address: "Канский район, а/д Канск-Тасеево-Устье", violations: "Скорость, выезд на встречную" },
@@ -206,7 +206,124 @@
             { name: "Передвижной комплекс 16", lat: 56.2027, lng: 91.7525, type: "mobile", address: "Емельяновский район, а/д Р-255 Сибирь 735км", violations: "Скорость" },
             { name: "Передвижной комплекс 10", lat: 55.9536, lng: 92.4444, type: "mobile", address: "Р-257 Енисей 35км", violations: "Скорость, выезд на встречную" },
             { name: "Азимут ДТ - 275-22", lat: 56.116995, lng: 93.310475, type: "stationary", address: "а/д Красноярск-Железногорск", violations: "Превышение скорости" },
-            { name: "Азимут ДТ - 276-22", lat: 56.550592, lng: 93.064825, type: "stationary", address: "а/д Красноярск-Енисейск", violations: "Превышение скорости" }
+            { name: "Азимут ДТ - 276-22", lat: 56.550592, lng: 93.064825, type: "stationary", address: "а/д Красноярск-Енисейск", violations: "Превышение скорости" },
+            { name: "Передвижной комплекс 26", lat: 55.907, lng: 94.7941, type: "mobile", address: "Рыбинский район, а/д Заозерный-Бородино", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 13", lat: 54.108, lng: 92.9465, type: "mobile", address: "Курагинский район, а/д Саяны", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 34", lat: 58.1256, lng: 92.77929, type: "mobile", address: "Енисейский район, а/д Красноярск-Енисейск", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 18", lat: 56.3797, lng: 90.5202, type: "mobile", address: "Ачинский район, а/д Ачинск-Бирилюссы", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 16", lat: 56.1428, lng: 92.9605, type: "mobile", address: "Емельяновский район, а/д Красноярск-Енисейск", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 16", lat: 56.1361, lng: 93.0993, type: "mobile", address: "Емельяновский район, Глубокий Обход Красноярска", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 29", lat: 56.209702, lng: 96.127669, type: "mobile", address: "Иланский район, а/д Р-255 Сибирь 1084км", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 26", lat: 55.9733, lng: 95.3164, type: "mobile", address: "Рыбинский район, а/д Р-255 Сибирь 1013км", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 26", lat: 55.8435, lng: 95.0134, type: "mobile", address: "Рыбинский район, а/д Р-255 Сибирь 985км", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 24", lat: 55.8509, lng: 94.3951, type: "mobile", address: "Уярский район, а/д Р-255 Сибирь 936км", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 23", lat: 56.0649, lng: 93.0893, type: "mobile", address: "Березовский район, а/д Красноярск-Березовка-Ермолаево", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 23", lat: 56.0167, lng: 93.2397, type: "mobile", address: "Березовский район, а/д Р-255 Сибирь 852км", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 19", lat: 56.2014, lng: 89.8025, type: "mobile", address: "Боготольский район, а/д Р-255 Сибирь 598км", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 18", lat: 56.2847, lng: 90.731, type: "mobile", address: "Ачинский район, а/д Р-255 Сибирь 666км", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 17", lat: 56.2633, lng: 91.0136, type: "mobile", address: "Козульский район, а/д Р-255 Сибирь 684км", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 16", lat: 56.1483, lng: 93.0455, type: "mobile", address: "Емельяновский район, Глубокий Обход Красноярска", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 16", lat: 56.2197, lng: 92.0532, type: "mobile", address: "Емельяновский район, а/д Р-255 Сибирь 754км", violations: "Скорость" },
+            { name: "Передвижной комплекс 16", lat: 56.1908, lng: 92.5321, type: "mobile", address: "Емельяновский район, а/д Р-255 Сибирь 786км", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 13", lat: 53.8946, lng: 92.6681, type: "mobile", address: "Курагинский район, а/д Саяны", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 13", lat: 53.7722, lng: 92.1208, type: "mobile", address: "Минусинский район, а/д САЯНЫ", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 13", lat: 53.9652, lng: 91.7998, type: "mobile", address: "Минусинский район, а/д Минусинск-Новоселово", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 12", lat: 55.068, lng: 91.0421, type: "mobile", address: "Новоселовский район, а/д Р-257 Енисей", violations: "Скорость, выезд на встречную" },
+            { name: "СИМСК-0924-13829", lat: 56.006165, lng: 90.416059, type: "stationary", address: "г. Назарово, пересечение ул. Карла Маркса - ул. 30 лет ВЛКСМ", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-13825", lat: 56.204909, lng: 89.535421, type: "stationary", address: "г. Боготол, пересечение ул. Кирова - ул. Школьная", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-13745", lat: 58.152156, lng: 92.575195, type: "stationary", address: "г. Лесосибирск, а/д Красноярск - Енисейск", violations: "Скорость, ремень, свет, телефон" },
+            { name: "СИМСК-0924-13833", lat: 58.23514, lng: 92.493372, type: "stationary", address: "г. Лесосибирск, пересечение ул. Горького - ул. Школьный пер.", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-13837", lat: 56.022736, lng: 93.126619, type: "stationary", address: "пгт. Берёзовка, пересечение ул. Трактовая - ул. Кирова", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-13841", lat: 56.037041, lng: 93.126697, type: "stationary", address: "пгт. Берёзовка, пересечение ул. Дружбы - ул. Кирова", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-13749", lat: 55.962088, lng: 92.357436, type: "stationary", address: "г.Дивногорск, а/д Р257 Енисей", violations: "Скорость, ремень, встреча, свет, телефон" },
+            { name: "СИМСК-0924-13746", lat: 55.857906, lng: 94.312219, type: "stationary", address: "Уярский район, а/д Р255 Сибирь 932км", violations: "Скорость, ремень, встреча, свет, телефон" },
+            { name: "СИМСК-0924-13747", lat: 55.847918, lng: 94.4686, type: "stationary", address: "Уярский район, а/д Р255 Сибирь 942км", violations: "Скорость, ремень, свет, телефон" },
+            { name: "СИМСК-0924-13849", lat: 56.243951, lng: 95.689992, type: "stationary", address: "г.Канск, пересечение ул. 40 лет Октября - ул. Муромская", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-13823", lat: 56.245198, lng: 90.479762, type: "stationary", address: "г. Ачинск, пересечение ул. Гагарина, 6", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-13820", lat: 56.243804, lng: 90.45238, type: "stationary", address: "г. Ачинск, пересечение ул. Кравченко - ш. Байкал", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет, телефон" },
+            { name: "СИМСК-0924-13816", lat: 56.269438, lng: 90.494627, type: "stationary", address: "г. Ачинск, пересечение ул. Свердлова - ул. Назарова", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон, знаки" },
+            { name: "СИМСК-0924-13744", lat: 56.182747, lng: 91.593175, type: "stationary", address: "Козульский район, а/д Р-255 Сибирь 725км", violations: "Скорость, ремень, свет, телефон" },
+            { name: "СИМСК-0924-13743", lat: 56.393697, lng: 92.964433, type: "stationary", address: "Сухобузимский район, а/д Красноярск-Енисейск", violations: "Скорость, ремень, свет, телефон" },
+            { name: "СИМСК-0924-13742", lat: 56.21251, lng: 92.975415, type: "stationary", address: "Емельяновский район, а/д Красноярск-Енисейск", violations: "Скорость, ремень, встреча, свет, телефон" },
+            { name: "СИМСК-0325-17822", lat: 56.036494, lng: 92.834099, type: "stationary", address: "г. Красноярск, ул. Брянская", violations: "Скорость, ремень, пешеходы, свет, телефон" },
+            { name: "СИМСК-0924-13740", lat: 56.122558, lng: 92.737416, type: "stationary", address: "Емельяновский район, а/д Р-255 Сибирь 803км", violations: "Скорость, ремень, встреча, свет, телефон" },
+            { name: "СИМСК-0924-13895", lat: 55.045826, lng: 90.981862, type: "stationary", address: "Новоселовский район, а/д Р-257 Енисей", violations: "Скорость, ремень, встреча, пешеходы, свет, телефон" },
+            { name: "СИМСК-0924-13810", lat: 56.014687, lng: 92.870724, type: "stationary", address: "г. Красноярск, пересечение ул. Вейнбаума - ул. Марковского", violations: "Скорость, ремень, светофор, стоп-линия, затор, знаки, свет, телефон" },
+            { name: "СИМСК-0924-13774", lat: 56.013721, lng: 92.871204, type: "stationary", address: "г. Красноярск, пересечение ул. Ленина - ул. Вейнбаума", violations: "Скорость, ремень, светофор, стоп-линия, затор, знаки, свет, телефон" },
+            { name: "СИМСК-0924-13805", lat: 56.033704, lng: 92.919713, type: "stationary", address: "г. Красноярск, пересечение ул. Взлётная - ул. Октябрьская", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет, телефон, затор" },
+            { name: "СИМСК-0924-13738", lat: 55.99887, lng: 92.834624, type: "stationary", address: "г. Красноярск, ул. Дубровинского, 114", violations: "Скорость, ремень, свет, телефон, встреча" },
+            { name: "СИМСК-0924-13802", lat: 56.055072, lng: 92.739905, type: "stationary", address: "г. Красноярск, ул. Калинина 169А", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-13853", lat: 56.188884, lng: 95.72596, type: "stationary", address: "г.Канск, пересечение ул. Эйдемана - ул. Николая Буды", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-13916", lat: 55.989031, lng: 92.976117, type: "stationary", address: "г. Красноярск, ул. Мичурина - ул. Грунтовая", violations: "Скорость, ремень, пешеходы, свет, телефон" },
+            { name: "СИМСК-0924-13798", lat: 55.998496, lng: 92.964987, type: "stationary", address: "г. Красноярск, пересечение ул. Павлова - ул. Щербакова", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-13857", lat: 56.204716, lng: 95.70513, type: "stationary", address: "г.Канск, пересечение ул. Ленина - ул. Московская", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет, телефон" },
+            { name: "СИМСК-0924-13748", lat: 56.013215, lng: 95.498298, type: "stationary", address: "Канский район, а/д Р-255 Сибирь 1026км", violations: "Скорость, ремень, свет, телефон" },
+            { name: "СИМСК-0924-13780", lat: 69.357321, lng: 88.169419, type: "stationary", address: "г.Норильск, пересечение ул.Вокзальная - ул. Нансена", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-11382", lat: 55.986376, lng: 92.895191, type: "stationary", address: "г. Красноярск, ул. Семафорная, 247Б", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон" },
+            { name: "СИМСК-0924-13790", lat: 56.065489, lng: 92.927199, type: "stationary", address: "г. Красноярск, пересечение ул. 9 мая - ул. Комсомольский пр-т", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет, телефон" },
+            { name: "СИМСК-0924-13786", lat: 56.012358, lng: 92.813335, type: "stationary", address: "г. Красноярск, пересечение ул. Копылова - ул. Ладо Кецховели", violations: "Скорость, ремень, светофор, стоп-линия, свет, телефон, знаки" },
+            { name: "СИМСК-0924-13736", lat: 56.021563, lng: 92.900746, type: "stationary", address: "г. Красноярск, ул. Белинского, 8", violations: "Скорость, ремень, маршрутка, свет, телефон" },
+            { name: "СИМСК-0924-13735", lat: 56.035565, lng: 92.927354, type: "stationary", address: "г. Красноярск, ул. Партизана Железняка, 42", violations: "Скорость, ремень, маршрутка, свет, телефон" },
+            { name: "СИМСК-0924-13734", lat: 56.012402, lng: 92.825047, type: "stationary", address: "г. Красноярск, ул. Копылова 42", violations: "Скорость, ремень, маршрутка, свет, телефон" },
+            { name: "СИМСК-0924-13733", lat: 56.026054, lng: 92.942591, type: "stationary", address: "г. Красноярск, Октябрьский мост (к ул. Авиаторов)", violations: "Скорость, ремень, маршрутка, свет, телефон" },
+            { name: "СИМСК-0924-13732", lat: 56.0284, lng: 92.9408, type: "stationary", address: "г. Красноярск, Октябрьский мост (к ул. Мичурина)", violations: "Скорость, ремень, маршрутка, свет, телефон" },
+            { name: "СИМСК-0924-13731", lat: 55.989439, lng: 92.809407, type: "stationary", address: "г. Красноярск, Николаевский мост (к ул. Дубровинского)", violations: "Скорость, ремень, маршрутка, свет, телефон" },
+            { name: "СИМСК-0924-13730", lat: 55.984978, lng: 92.811257, type: "stationary", address: "г. Красноярск, Николаевский мост (к ул. Свердловская)", violations: "Скорость, ремень, маршрутка, телефон, свет" },
+            { name: "Передвижной комплекс 32", lat: 56.9188, lng: 93.1029, type: "mobile", address: "Большемуртинский район, а/д Красноярск-Енисейск", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 13", lat: 53.6531, lng: 91.5757, type: "mobile", address: "Минусинский район, а/д Р-257 Енисей", violations: "Скорость, выезд на встречную" },
+            { name: "Страж", lat: 56.180897, lng: 92.488408, type: "stationary", address: "а/д Подъезд к а/п Емельяново", violations: "Запрет остановки" },
+            { name: "Страж", lat: 56.182293, lng: 92.48319, type: "stationary", address: "Кольцевое пересечение Байкал-Черемшанка", violations: "Запрет остановки" },
+            { name: "Пульсар", lat: 56.0436, lng: 92.9094, type: "stationary", address: "г. Красноярск, пересечение ул. Молокова и 78-й Добровольческой бригады", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет, телефон" },
+            { name: "Пульсар", lat: 56.0434, lng: 92.9086, type: "stationary", address: "г. Красноярск, пересечение ул. Молокова и 78-й Добровольческой бригады", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет, телефон" },
+            { name: "Передвижной комплекс 27", lat: 56.2315, lng: 95.6096, type: "mobile", address: "Канский район, Обход г. Канска", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 23", lat: 55.9936, lng: 93.2651, type: "mobile", address: "Березовский район, а/д Р-255 Сибирь 855км", violations: "Скорость, выезд на встречную" },
+            { name: "222-22", lat: 53.688738, lng: 91.671907, type: "stationary", address: "г. Минусинск, пересечение улиц Ванеева и Тимирязева", violations: "Скорость, ремень, светофор, стоп-линия, свет, знаки" },
+            { name: "Передвижной комплекс 33", lat: 57.517, lng: 93.1975, type: "mobile", address: "Казачинский район, а/д Красноярск-Енисейск", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 26", lat: 55.7759, lng: 94.7337, type: "mobile", address: "Рыбинский район, а/д Р-255 Сибирь 960км", violations: "Скорость, выезд на встречную" },
+            { name: "Передвижной комплекс 17", lat: 56.1815, lng: 91.6278, type: "mobile", address: "Козульский район, а/д Р-255 Сибирь 727км", violations: "Скорость, выезд на встречную" },
+            { name: "209-22", lat: 56.181006, lng: 95.714151, type: "stationary", address: "г. Канск, ул. Окружная, 43", violations: "Скорость, ремень, встреча, свет" },
+            { name: "221-22", lat: 56.228001, lng: 95.709168, type: "stationary", address: "г. Канск, пересечение 40 лет Октября и Волгодонская", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "210-22", lat: 53.71693, lng: 91.699615, type: "stationary", address: "г. Минусинск, пересечение Комсомольская и Утро Сентябрьское", violations: "Скорость, ремень, свет" },
+            { name: "220-22", lat: 53.687561, lng: 91.659847, type: "stationary", address: "г. Минусинск, пересечение Абаканская и Гагарина", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "182-22", lat: 56.2177, lng: 95.721173, type: "stationary", address: "г. Канск, ул. Василия Яковенко, 22", violations: "Скорость, ремень, пешеходы, свет" },
+            { name: "211-22", lat: 58.27187, lng: 92.423488, type: "stationary", address: "а/д Красноярск-Енисейск, 297км", violations: "Скорость, ремень, свет" },
+            { name: "208-22", lat: 56.198629, lng: 93.415934, type: "stationary", address: "г. Железногорск, ул. Енисейская, 53", violations: "Скорость, ремень, свет" },
+            { name: "181-22", lat: 58.29412, lng: 92.393364, type: "stationary", address: "а/д Красноярск-Енисейск, 299км", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "193-22", lat: 56.051835, lng: 92.901098, type: "stationary", address: "г. Красноярск, ул. 9 Мая, 77", violations: "Скорость, ремень, маршрутка, свет" },
+            { name: "223-22", lat: 56.063085, lng: 92.973766, type: "stationary", address: "г. Красноярск, пересечение Металлургов и Тельмана", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "212-22", lat: 58.429187, lng: 92.269776, type: "stationary", address: "с. Верхнепашино, а/д Красноярск-Енисейск", violations: "Скорость, ремень, встреча, свет" },
+            { name: "224-22", lat: 56.012176, lng: 92.848144, type: "stationary", address: "г. Красноярск, пересечение Ленина и Горького", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет" },
+            { name: "225-22", lat: 56.023754, lng: 92.815324, type: "stationary", address: "г. Красноярск, пересечение пр. Свободный – ул. Омская", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет" },
+            { name: "207-22", lat: 55.551987, lng: 89.123863, type: "stationary", address: "Шарыповский р-н, а/д Шарыпово-Дубинино", violations: "Скорость, ремень, свет" },
+            { name: "219-22", lat: 58.453161, lng: 92.173029, type: "stationary", address: "г. Енисейск, пересечение Бабкина и Рабоче-Крестьянская", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "183-22", lat: 56.037443, lng: 92.921143, type: "stationary", address: "г. Красноярск, ул. Октябрьская, 10", violations: "Скорость, ремень, свет" },
+            { name: "218-22", lat: 56.263476, lng: 90.494263, type: "stationary", address: "г. Ачинск, пересечение Кравченко и Зверева", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "204-22", lat: 56.179398, lng: 92.495892, type: "stationary", address: "Емельяновский район, Подъезд к а/п Емельяново", violations: "Скорость, ремень, свет" },
+            { name: "192-22", lat: 56.0119, lng: 92.95921, type: "stationary", address: "г. Красноярск, ул. Мичурина, 3", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "216-22", lat: 56.250097, lng: 90.479445, type: "stationary", address: "г. Ачинск, ул. Гагарина, 14", violations: "Скорость, ремень, свет" },
+            { name: "191-22", lat: 56.003718, lng: 92.953238, type: "stationary", address: "г. Красноярск, ул. Вавилова, 100", violations: "Скорость, ремень, пешеходы, свет" },
+            { name: "189-22", lat: 56.003872, lng: 92.937093, type: "stationary", address: "г. Красноярск, пр. Красноярский рабочий, 106", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "180-22", lat: 56.284762, lng: 90.506403, type: "stationary", address: "г. Ачинск, ул. Льва Толстого, 4", violations: "Скорость, ремень, пешеходы, свет" },
+            { name: "190-22", lat: 56.013818, lng: 92.974768, type: "stationary", address: "г. Красноярск, пр. Красноярский рабочий, 56", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "213-22", lat: 55.549357, lng: 89.13986, type: "stationary", address: "Шарыповский район, а/д Шарыпово-Дубинино", violations: "Скорость, ремень, свет" },
+            { name: "233-22", lat: 56.011453, lng: 92.813417, type: "stationary", address: "г. Красноярск, пересечение Красной Армии и Ладо Кецховели", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "188-22", lat: 55.992546, lng: 92.959803, type: "stationary", address: "г. Красноярск, пересечение Щорса и Котовского", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "205-22", lat: 55.994678, lng: 92.93262, type: "stationary", address: "г. Красноярск, ул. Семафорная, 289", violations: "Скорость, ремень, встреча, свет" },
+            { name: "214-22", lat: 55.5588, lng: 90.0224, type: "stationary", address: "Ужурский район, а/д Ачинск-Ужур-Троицкое", violations: "Скорость, ремень, свет" },
+            { name: "232-22", lat: 56.022175, lng: 93.01095, type: "stationary", address: "г. Красноярск, пересечение пр. Красноярский рабочий и ул. Крылова", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "231-22", lat: 55.978262, lng: 92.859313, type: "stationary", address: "г. Красноярск, пересечение 60 лет Октября и Парашютная", violations: "Скорость, ремень, светофор, стоп-линия, встреча, свет" },
+            { name: "179-22", lat: 56.03237, lng: 92.92175, type: "stationary", address: "г. Красноярск, пересечение Партизана Железняка и Октябрьская", violations: "Скорость, ремень, светофор, стоп-линия, знаки, маршрутка, свет" },
+            { name: "206-22", lat: 55.985103, lng: 92.954121, type: "stationary", address: "г. Красноярск, ул. Грунтовая, 24А", violations: "Скорость, ремень, встреча, свет" },
+            { name: "187-22", lat: 56.016867, lng: 92.964085, type: "stationary", address: "г. Красноярск, пересечение Крайняя и Астраханская", violations: "Скорость, ремень, светофор, стоп-линия, свет" },
+            { name: "230-22", lat: 56.058489, lng: 92.91338, type: "stationary", address: "г. Красноярск, пересечение 9 Мая и Водопьянова", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет" },
+            { name: "186-22", lat: 56.026888, lng: 92.834353, type: "stationary", address: "г. Красноярск, Северо-Енисейская, 42", violations: "Скорость, ремень, пешеходы, свет" },
+            { name: "229-22", lat: 55.985348, lng: 92.886871, type: "stationary", address: "г. Красноярск, пересечение Матросова и Семафорная", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет" },
+            { name: "228-22", lat: 56.007944, lng: 92.952, type: "stationary", address: "г. Красноярск, пересечение пр. Красноярский рабочий и ул. Корнетова", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет" },
+            { name: "227-22", lat: 56.050737, lng: 92.911462, type: "stationary", address: "г. Красноярск, пересечение Алексеева и Авиаторов", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет" },
+            { name: "226-22", lat: 56.046609, lng: 92.915749, type: "stationary", address: "г. Красноярск, пересечение Молокова и Авиаторов", violations: "Скорость, ремень, светофор, стоп-линия, знаки, свет" },
+            { name: "185-22", lat: 56.064514, lng: 92.937448, type: "stationary", address: "г. Красноярск, ул. Шумяцкого, 1", violations: "Скорость, ремень, пешеходы, свет" },
+            { name: "215-22", lat: 56.023359, lng: 92.80842, type: "stationary", address: "г. Красноярск, пр. Свободный, 65", violations: "Скорость, ремень, свет" },
+            { name: "184-22", lat: 56.033646, lng: 92.882636, type: "stationary", address: "г. Красноярск, ул. Мужества, 21", violations: "Скорость, ремень, пешеходы, свет" }
         ];
         
         console.log("📸 Загружено камер:", cameras.length);
@@ -225,7 +342,7 @@
                 .bindPopup(`<b>${camera.name}</b><br>📍 ${camera.address}<br>⚠️ ${camera.violations}`);
         });
         
-        // ===== МЕТКА АВТОМОБИЛЯ (как в навигаторе) =====
+        // ===== МЕТКА АВТОМОБИЛЯ (ЧЁРНЫЙ КУЗОВ) =====
         function createCarIcon(heading) {
             var canvas = document.createElement('canvas');
             canvas.width = 48;
@@ -234,12 +351,9 @@
             
             ctx.clearRect(0, 0, 48, 48);
             ctx.save();
-            
-            // Поворачиваем весь автомобиль
             ctx.translate(24, 24);
             ctx.rotate((heading * Math.PI) / 180);
             
-            // Тень
             ctx.shadowColor = 'rgba(0,0,0,0.4)';
             ctx.shadowBlur = 5;
             
@@ -255,9 +369,8 @@
             ctx.fillStyle = '#2980b9';
             ctx.fill();
             
-            // Рисуем силуэт автомобиля (вид сверху)
+            // ЧЁРНЫЙ КУЗОВ
             ctx.beginPath();
-            // Кузов (прямоугольник со скруглёнными углами)
             ctx.moveTo(-7, -10);
             ctx.lineTo(7, -10);
             ctx.quadraticCurveTo(10, -10, 10, -6);
@@ -268,42 +381,56 @@
             ctx.lineTo(-10, -6);
             ctx.quadraticCurveTo(-10, -10, -7, -10);
             ctx.closePath();
-            ctx.fillStyle = '#1a6db0';
+            ctx.fillStyle = '#1a1a1a';
             ctx.fill();
             
-            // Крыша (светлая)
+            // Крыша
             ctx.beginPath();
             ctx.moveTo(-4, -5);
             ctx.lineTo(4, -5);
             ctx.lineTo(3, -9);
             ctx.lineTo(-3, -9);
             ctx.closePath();
-            ctx.fillStyle = '#5dade2';
+            ctx.fillStyle = '#444444';
             ctx.fill();
             
-            // Передние фары
+            // Контур
+            ctx.beginPath();
+            ctx.moveTo(-7, -10);
+            ctx.lineTo(7, -10);
+            ctx.quadraticCurveTo(10, -10, 10, -6);
+            ctx.lineTo(10, 6);
+            ctx.quadraticCurveTo(10, 10, 7, 10);
+            ctx.lineTo(-7, 10);
+            ctx.quadraticCurveTo(-10, 10, -10, 6);
+            ctx.lineTo(-10, -6);
+            ctx.quadraticCurveTo(-10, -10, -7, -10);
+            ctx.closePath();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // Передние фары (жёлтые)
             ctx.beginPath();
             ctx.arc(8, -3, 1.5, 0, 2 * Math.PI);
             ctx.fillStyle = '#f1c40f';
             ctx.fill();
-            
             ctx.beginPath();
             ctx.arc(8, 3, 1.5, 0, 2 * Math.PI);
             ctx.fillStyle = '#f1c40f';
             ctx.fill();
             
-            // Задние фары
+            // Задние фары (красные)
             ctx.beginPath();
             ctx.arc(-8, -3, 1.2, 0, 2 * Math.PI);
             ctx.fillStyle = '#e74c3c';
             ctx.fill();
-            
             ctx.beginPath();
             ctx.arc(-8, 3, 1.2, 0, 2 * Math.PI);
             ctx.fillStyle = '#e74c3c';
             ctx.fill();
             
-            // Стекло переднее
+            // Стекло
             ctx.beginPath();
             ctx.moveTo(-2, -5);
             ctx.lineTo(2, -5);
@@ -422,7 +549,6 @@
                     
                     document.getElementById('startPoint').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                     
-                    // МАШИНКА
                     if (carMarker) map.removeLayer(carMarker);
                     var currentHeading = (heading !== null && !isNaN(heading)) ? heading : lastHeading;
                     carMarker = L.marker([lat, lng], {
@@ -488,7 +614,6 @@
         autoUpdateBtn.addEventListener('click', toggleAutoUpdate);
         voiceAssistantBtn.addEventListener('click', toggleVoiceAssistant);
         
-        // ===== ГЕОКОДИНГ =====
         async function geocodeAddress(address) {
             if (!address.toLowerCase().includes('красноярск')) {
                 address = address + ', Красноярск';
@@ -507,39 +632,27 @@
             }
         }
         
-        // ===== ПОСТРОЕНИЕ МАРШРУТА =====
         async function buildRoute(start, end) {
             var url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&steps=true`;
-            
             try {
                 var response = await fetch(url);
                 var data = await response.json();
-                
                 if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
                     var route = data.routes[0];
                     currentSteps = [];
                     nextStepIndex = 0;
                     lastNotifiedStep = -1;
-                    
                     if (route.legs && route.legs[0] && route.legs[0].steps) {
                         route.legs[0].steps.forEach(function(step) {
                             var instruction = step.maneuver.instruction;
                             if (instruction && instruction.length > 0) {
-                                currentSteps.push({
-                                    instruction: instruction,
-                                    distance: step.distance
-                                });
+                                currentSteps.push({ instruction: instruction, distance: step.distance });
                             }
                         });
                     }
-                    
                     var distance = (route.distance / 1000).toFixed(1);
                     var duration = Math.round(route.duration / 60);
-                    
-                    if (voiceEnabled) {
-                        speakText(`Маршрут построен. Расстояние ${distance} км, время ${duration} минут`);
-                    }
-                    
+                    if (voiceEnabled) speakText(`Маршрут построен. Расстояние ${distance} км, время ${duration} минут`);
                     return { geometry: route.geometry, distance: distance, duration: duration };
                 }
                 return null;
@@ -551,18 +664,13 @@
         
         function displayRoute(geometry, distance, duration) {
             if (currentRoute) map.removeLayer(currentRoute);
-            currentRoute = L.geoJSON(geometry, {
-                style: { color: '#e74c3c', weight: 5, opacity: 0.8 }
-            }).addTo(map);
+            currentRoute = L.geoJSON(geometry, { style: { color: '#e74c3c', weight: 5, opacity: 0.8 } }).addTo(map);
             var routeInfo = document.getElementById('routeInfo');
             routeInfo.style.display = 'block';
             routeInfo.innerHTML = `📏 ${distance} км | ⏱️ ${duration} мин | 🚗 Автомобиль`;
-            if (currentRoute.getBounds && currentRoute.getBounds().isValid()) {
-                map.fitBounds(currentRoute.getBounds());
-            }
+            if (currentRoute.getBounds && currentRoute.getBounds().isValid()) map.fitBounds(currentRoute.getBounds());
         }
         
-        // ===== КЛИКИ ПО КАРТЕ =====
         map.on('click', function(e) {
             if (waitingForStart) {
                 startPointCoord = { lat: e.latlng.lat, lng: e.latlng.lng };
@@ -590,10 +698,7 @@
             if (!navigator.geolocation) { alert("Геолокация не поддерживается"); return; }
             this.textContent = "⏳...";
             navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    map.setView([position.coords.latitude, position.coords.longitude], 16);
-                    document.getElementById('myLocationBtn').textContent = "📍 Моё место";
-                },
+                function(position) { map.setView([position.coords.latitude, position.coords.longitude], 16); document.getElementById('myLocationBtn').textContent = "📍 Моё место"; },
                 function() { alert("Не удалось определить местоположение"); document.getElementById('myLocationBtn').textContent = "📍 Моё место"; }
             );
         });
@@ -609,77 +714,30 @@
         document.getElementById('buildRouteBtn').addEventListener('click', async function() {
             var startText = document.getElementById('startPoint').value.trim();
             var endText = document.getElementById('endPoint').value.trim();
-            
-            if (!startText || !endText) {
-                alert("Введите начальную и конечную точки");
-                return;
-            }
-            
-            this.textContent = "⏳ Поиск...";
-            this.disabled = true;
-            
+            if (!startText || !endText) { alert("Введите начальную и конечную точки"); return; }
+            this.textContent = "⏳ Поиск..."; this.disabled = true;
             try {
-                var start = startPointCoord;
-                var end = endPointCoord;
-                
-                if (!start && startText && !startText.includes(",")) {
-                    this.textContent = "⏳ Ищем откуда...";
-                    start = await geocodeAddress(startText);
-                }
-                if (!end && endText && !endText.includes(",")) {
-                    this.textContent = "⏳ Ищем куда...";
-                    end = await geocodeAddress(endText);
-                }
-                
-                if (!start && startText.includes(",")) {
-                    var parts = startText.split(",");
-                    start = { lat: parseFloat(parts[0]), lng: parseFloat(parts[1]) };
-                }
-                if (!end && endText.includes(",")) {
-                    var parts = endText.split(",");
-                    end = { lat: parseFloat(parts[0]), lng: parseFloat(parts[1]) };
-                }
-                
-                if (!start) {
-                    alert(`Не удалось найти адрес: ${startText}`);
-                    this.textContent = "🗺️ Маршрут";
-                    this.disabled = false;
-                    return;
-                }
-                if (!end) {
-                    alert(`Не удалось найти адрес: ${endText}`);
-                    this.textContent = "🗺️ Маршрут";
-                    this.disabled = false;
-                    return;
-                }
-                
+                var start = startPointCoord, end = endPointCoord;
+                if (!start && startText && !startText.includes(",")) { start = await geocodeAddress(startText); }
+                if (!end && endText && !endText.includes(",")) { end = await geocodeAddress(endText); }
+                if (!start && startText.includes(",")) { var p = startText.split(","); start = { lat: parseFloat(p[0]), lng: parseFloat(p[1]) }; }
+                if (!end && endText.includes(",")) { var p = endText.split(","); end = { lat: parseFloat(p[0]), lng: parseFloat(p[1]) }; }
+                if (!start) { alert(`Не удалось найти адрес: ${startText}`); this.textContent = "🗺️ Маршрут"; this.disabled = false; return; }
+                if (!end) { alert(`Не удалось найти адрес: ${endText}`); this.textContent = "🗺️ Маршрут"; this.disabled = false; return; }
                 this.textContent = "⏳ Строим маршрут...";
                 var route = await buildRoute(start, end);
-                
-                if (route) {
-                    displayRoute(route.geometry, route.distance, route.duration);
-                    speakText(`Маршрут построен. Расстояние ${route.distance} км`);
-                } else {
-                    alert("Не удалось построить маршрут.");
-                }
-            } catch (err) {
-                console.error("Ошибка:", err);
-                alert("Ошибка при построении маршрута");
-            } finally {
-                this.textContent = "🗺️ Маршрут";
-                this.disabled = false;
-            }
+                if (route) displayRoute(route.geometry, route.distance, route.duration);
+                else alert("Не удалось построить маршрут.");
+            } catch(err) { alert("Ошибка при построении маршрута"); }
+            finally { this.textContent = "🗺️ Маршрут"; this.disabled = false; }
         });
         
         document.getElementById('clearRouteBtn').addEventListener('click', function() {
             if (currentRoute) map.removeLayer(currentRoute);
             if (startMarker) map.removeLayer(startMarker);
             if (endMarker) map.removeLayer(endMarker);
-            startPointCoord = null;
-            endPointCoord = null;
-            currentSteps = [];
-            nextStepIndex = 0;
-            lastNotifiedStep = -1;
+            startPointCoord = null; endPointCoord = null;
+            currentSteps = []; nextStepIndex = 0; lastNotifiedStep = -1;
             document.getElementById('startPoint').value = '';
             document.getElementById('endPoint').value = '';
             document.getElementById('routeInfo').style.display = 'none';
@@ -694,7 +752,7 @@
         });
         
         setTimeout(function() { map.invalidateSize(); }, 100);
-        console.log("📱 Навигатор загружен! Метка-автомобиль готова 🚗");
+        console.log("📱 Навигатор загружен! Всего камер:", cameras.length);
     </script>
 </body>
 </html>
