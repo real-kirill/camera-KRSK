@@ -11,8 +11,9 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #1a472a; overflow: hidden; position: fixed; width: 100%; height: 100%; }
-        .app-header { position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a472a, #0d2818); color: white; padding: 12px 16px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: space-between; }
+        .app-header { position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a472a, #0d2818); color: white; padding: 12px 16px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
         .app-header h1 { font-size: 18px; font-weight: 600; }
+        .compass-status { font-size: 11px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 20px; }
         #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 1; }
         .nav-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 10px 12px; border-radius: 20px 20px 0 0; box-shadow: 0 -2px 15px rgba(0,0,0,0.15); z-index: 1000; transition: transform 0.3s ease; }
         .nav-bottom.hidden { transform: translateY(100%); }
@@ -65,10 +66,11 @@
 <body>
     <div class="app-header">
         <h1>🚔 ГИБДД Навигатор Красноярск</h1>
+        <div class="compass-status" id="compassStatus">🧭 ожидание GPS</div>
     </div>
     
     <div id="map"></div>
-    <div class="mobile-legend">🔴🚔 стац | 🟡📷 пере | 🟢 A (моё место)</div>
+    <div class="mobile-legend">🔴🚔 стац | 🟡📷 пере | 🧭 стрелка направления</div>
     <div class="toggle-panel" id="togglePanelBtn">▲</div>
     <button class="goto-me-btn" id="gotoMeBtn" title="Переместиться на моё местоположение">📍</button>
     
@@ -104,23 +106,25 @@
             opacity: 0.85
         }).addTo(map);
         
-        // ===== ГОЛОСОВАЯ ФУНКЦИЯ =====
+        // ===== ГОЛОС =====
         var voiceEnabled = true;
         
         function speakText(message) {
             if (!voiceEnabled) return;
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                var utterance = new SpeechSynthesisUtterance(message);
-                utterance.lang = 'ru-RU';
-                utterance.rate = 0.85;
-                utterance.pitch = 1.0;
-                window.speechSynthesis.speak(utterance);
-                console.log(`🔊 Голос: "${message}"`);
+                try {
+                    window.speechSynthesis.cancel();
+                    var utterance = new SpeechSynthesisUtterance(message);
+                    utterance.lang = 'ru-RU';
+                    utterance.rate = 0.85;
+                    utterance.pitch = 1.0;
+                    window.speechSynthesis.speak(utterance);
+                    console.log(`🔊 Голос: "${message}"`);
+                } catch(e) { console.log("Голос не доступен"); }
             }
         }
         
-        // ===== ВСЕ 205 КАМЕР (полный список) =====
+        // ===== ВСЕ КАМЕРЫ (полный список 205 шт) =====
         var cameras = [
             { name: "Передвижной комплекс 27", lat: 56.095688, lng: 95.597434, type: "mobile", address: "Канский район, а/д Р-255 Сибирь 1037км", violations: "Скорость, выезд на встречную" },
             { name: "Передвижной комплекс 27", lat: 56.517, lng: 95.4248, type: "mobile", address: "Канский район, а/д Канск-Тасеево-Устье", violations: "Скорость, выезд на встречную" },
@@ -324,7 +328,7 @@
         
         console.log("📸 Загружено камер:", cameras.length);
         
-        // Добавляем камеры на карту
+        // Добавляем все камеры на карту
         cameras.forEach(function(camera) {
             var color = camera.type === 'stationary' ? '#e74c3c' : '#f39c12';
             var iconHtml = camera.type === 'stationary' ? '🚔' : '📷';
@@ -338,7 +342,7 @@
                 .bindPopup(`<b>${camera.name}</b><br>📍 ${camera.address}<br>⚠️ ${camera.violations}`);
         });
         
-        // ===== ПЕРЕМЕННЫЕ ДЛЯ МАРШРУТА =====
+        // ===== ПЕРЕМЕННЫЕ =====
         var currentRoute = null, startMarker = null, endMarker = null;
         var startPointCoord = null, endPointCoord = null;
         var waitingForStart = false, waitingForEnd = false;
@@ -346,6 +350,38 @@
         var nextStepIndex = 0;
         var lastNotifiedStep = -1;
         var alertedCameras = {};
+        
+        // === КОМПАС И СТРЕЛКА НАПРАВЛЕНИЯ ===
+        var directionMarker = null;
+        var lastHeading = 0;
+        var compassStatus = document.getElementById('compassStatus');
+        
+        function createDirectionIcon(heading) {
+            return L.divIcon({
+                html: `<div style="
+                    background: #2980b9; 
+                    width: 40px; 
+                    height: 40px; 
+                    border-radius: 50%; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    font-size: 24px;
+                    transform: rotate(${heading}deg);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    border: 2px solid white;
+                ">🧭</div>`,
+                iconSize: [40, 40],
+                className: 'direction-arrow'
+            });
+        }
+        
+        function getDirectionText(heading) {
+            if (heading === null || isNaN(heading)) return "?";
+            var directions = ["север", "северо-восток", "восток", "юго-восток", "юг", "юго-запад", "запад", "северо-запад"];
+            var index = Math.round(heading / 45) % 8;
+            return directions[index];
+        }
         
         function getDistance(lat1, lon1, lat2, lon2) {
             var R = 6371000;
@@ -392,7 +428,7 @@
             }
         }
         
-        // ===== АВТООБНОВЛЕНИЕ =====
+        // ===== АВТООБНОВЛЕНИЕ С КОМПАСОМ =====
         var watchPositionId = null;
         var autoUpdateActive = false;
         var autoUpdateBtn = document.getElementById('autoUpdateBtn');
@@ -416,7 +452,9 @@
                 function(position) {
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
+                    var heading = position.coords.heading;
                     
+                    // Обновляем начальную точку
                     startPointCoord = { lat: lat, lng: lng };
                     if (startMarker) map.removeLayer(startMarker);
                     startMarker = L.marker([lat, lng], {
@@ -428,6 +466,7 @@
                     
                     document.getElementById('startPoint').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                     
+                    // Синяя точка
                     if (currentLocationMarker) map.removeLayer(currentLocationMarker);
                     currentLocationMarker = L.marker([lat, lng], {
                         icon: L.divIcon({
@@ -436,10 +475,33 @@
                         })
                     }).addTo(map);
                     
+                    // СТРЕЛКА НАПРАВЛЕНИЯ (КОМПАС)
+                    if (directionMarker) map.removeLayer(directionMarker);
+                    
+                    if (heading !== null && !isNaN(heading) && heading >= 0) {
+                        directionMarker = L.marker([lat, lng], {
+                            icon: createDirectionIcon(heading),
+                            zIndexOffset: 100
+                        }).addTo(map);
+                        lastHeading = heading;
+                        compassStatus.innerHTML = `🧭 ${Math.round(heading)}° (${getDirectionText(heading)})`;
+                    } else if (lastHeading !== 0) {
+                        directionMarker = L.marker([lat, lng], {
+                            icon: createDirectionIcon(lastHeading),
+                            zIndexOffset: 100
+                        }).addTo(map);
+                        compassStatus.innerHTML = `🧭 ${Math.round(lastHeading)}° (${getDirectionText(lastHeading)}) *`;
+                    } else {
+                        compassStatus.innerHTML = `🧭 ожидание GPS`;
+                    }
+                    
                     checkCamerasAndAlert(lat, lng);
                     checkRouteProgress(lat, lng);
                 },
-                function(error) { console.error("Ошибка геолокации:", error.message); },
+                function(error) { 
+                    console.error("Ошибка геолокации:", error.message);
+                    compassStatus.innerHTML = `🧭 ошибка GPS`;
+                },
                 options
             );
         }
@@ -453,6 +515,10 @@
             autoUpdateBtn.textContent = '📍 Авто';
             autoUpdateBtn.classList.remove('btn-auto-active');
             autoUpdateBtn.classList.add('btn-auto');
+            
+            if (directionMarker) map.removeLayer(directionMarker);
+            directionMarker = null;
+            compassStatus.innerHTML = `🧭 ожидание GPS`;
         }
         
         function toggleAutoUpdate() {
@@ -503,8 +569,6 @@
         async function buildRoute(start, end) {
             var url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&steps=true&alternatives=false`;
             
-            console.log("Запрос маршрута:", url);
-            
             try {
                 var response = await fetch(url);
                 var data = await response.json();
@@ -521,9 +585,7 @@
                             if (instruction && instruction.length > 0) {
                                 currentSteps.push({
                                     instruction: instruction,
-                                    distance: step.distance,
-                                    modifier: step.maneuver.modifier,
-                                    type: step.maneuver.type
+                                    distance: step.distance
                                 });
                             }
                         });
@@ -533,14 +595,12 @@
                     var duration = Math.round(route.duration / 60);
                     
                     if (voiceEnabled) {
-                        speakText(`Маршрут построен. Расстояние ${distance} километров, время в пути примерно ${duration} минут`);
+                        speakText(`Маршрут построен. Расстояние ${distance} км, время ${duration} минут`);
                     }
                     
                     return { geometry: route.geometry, distance: distance, duration: duration };
-                } else {
-                    console.error("OSRM ошибка:", data);
-                    return null;
                 }
+                return null;
             } catch (error) {
                 console.error("Ошибка OSRM:", error);
                 return null;
@@ -584,7 +644,6 @@
         document.getElementById('startPoint').addEventListener('focus', function() { waitingForStart = true; waitingForEnd = false; this.placeholder = "Кликните на карте"; });
         document.getElementById('endPoint').addEventListener('focus', function() { waitingForEnd = true; waitingForStart = false; this.placeholder = "Кликните на карте"; });
         
-        // Кнопка "Моё место"
         document.getElementById('myLocationBtn').addEventListener('click', function() {
             if (!navigator.geolocation) { alert("Геолокация не поддерживается"); return; }
             this.textContent = "⏳...";
@@ -597,18 +656,14 @@
             );
         });
         
-        // Кнопка "На меня"
         document.getElementById('gotoMeBtn').addEventListener('click', function() {
             if (!navigator.geolocation) { alert("Геолокация не поддерживается"); return; }
             navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    map.setView([position.coords.latitude, position.coords.longitude], 16);
-                },
+                function(position) { map.setView([position.coords.latitude, position.coords.longitude], 16); },
                 function() { alert("Не удалось определить местоположение"); }
             );
         });
         
-        // Построение маршрута
         document.getElementById('buildRouteBtn').addEventListener('click', async function() {
             var startText = document.getElementById('startPoint').value.trim();
             var endText = document.getElementById('endPoint').value.trim();
@@ -625,23 +680,32 @@
                 var start = startPointCoord;
                 var end = endPointCoord;
                 
-                if (!start && startText) {
+                if (!start && startText && !startText.includes(",")) {
                     this.textContent = "⏳ Ищем откуда...";
                     start = await geocodeAddress(startText);
                 }
-                if (!end && endText) {
+                if (!end && endText && !endText.includes(",")) {
                     this.textContent = "⏳ Ищем куда...";
                     end = await geocodeAddress(endText);
                 }
                 
+                if (!start && startText.includes(",")) {
+                    var parts = startText.split(",");
+                    start = { lat: parseFloat(parts[0]), lng: parseFloat(parts[1]) };
+                }
+                if (!end && endText.includes(",")) {
+                    var parts = endText.split(",");
+                    end = { lat: parseFloat(parts[0]), lng: parseFloat(parts[1]) };
+                }
+                
                 if (!start) {
-                    alert(`Не удалось найти адрес: ${startText}\nПопробуйте указать подробнее`);
+                    alert(`Не удалось найти адрес: ${startText}`);
                     this.textContent = "🗺️ Маршрут";
                     this.disabled = false;
                     return;
                 }
                 if (!end) {
-                    alert(`Не удалось найти адрес: ${endText}\nПопробуйте указать подробнее`);
+                    alert(`Не удалось найти адрес: ${endText}`);
                     this.textContent = "🗺️ Маршрут";
                     this.disabled = false;
                     return;
@@ -652,9 +716,9 @@
                 
                 if (route) {
                     displayRoute(route.geometry, route.distance, route.duration);
-                    speakText(`Маршрут построен. Расстояние ${route.distance} километров`);
+                    speakText(`Маршрут построен. Расстояние ${route.distance} км`);
                 } else {
-                    alert("Не удалось построить маршрут. Попробуйте выбрать другие точки.");
+                    alert("Не удалось построить маршрут.");
                 }
             } catch (err) {
                 console.error("Ошибка:", err);
@@ -688,7 +752,7 @@
         });
         
         setTimeout(function() { map.invalidateSize(); }, 100);
-        console.log("📱 Приложение загружено! Всего камер:", cameras.length);
+        console.log("📱 Навигатор загружен! Всего камер:", cameras.length);
     </script>
 </body>
 </html>
